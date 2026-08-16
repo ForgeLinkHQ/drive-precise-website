@@ -3,7 +3,7 @@ import { Check, Home, Plus, Truck, Wrench } from "lucide-react";
 
 import { PriceBadge } from "@/components/site/price-badge";
 import { Button } from "@/components/ui/button";
-import { addItem, hasItem, removeItem, useQuoteDraft } from "@/lib/basket";
+import { addItem, removeItem, useHasItem } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
 import { formatDuration, type MobileSuitability, type Service } from "@/lib/services";
 import { cn } from "@/lib/utils";
@@ -45,10 +45,10 @@ export function ServiceCard({
   className?: string;
   showAdd?: boolean;
 }) {
-  // Subscribed so the added state re-renders when the basket changes from
-  // anywhere else — the builder, the sticky bar, another card.
-  useQuoteDraft();
-  const added = hasItem(service.id);
+  // Subscribed, so the added state re-renders when the basket changes from
+  // anywhere else — the builder, the sticky bar, another card — and so this
+  // render can never observe a store mutation React wasn't told about.
+  const added = useHasItem(service.id);
   const delivery = DELIVERY[service.mobile];
 
   return (

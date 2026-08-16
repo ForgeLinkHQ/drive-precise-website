@@ -20,7 +20,7 @@ import {
   retailServices,
   type Service,
 } from "@/lib/services";
-import { addItem, hasItem, removeItem, useQuoteDraft } from "@/lib/basket";
+import { addItem, removeItem, useHasItem } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
 import { PARTNER_BLURB } from "@/lib/partners";
 
@@ -67,8 +67,7 @@ function ServicePage() {
   // database has it, so a price edited in admin shows here too.
   const live = services.find((s) => s.id === service.id) ?? service;
 
-  useQuoteDraft();
-  const added = hasItem(live.id);
+  const added = useHasItem(live.id);
 
   const related = relatedServices(live, services);
 

@@ -60,8 +60,8 @@ export function RegPlateInput({
       <div
         className={cn(
           "plate w-full max-w-sm",
-          size === "md" && "h-14 text-2xl",
-          size === "lg" && "h-16 text-3xl sm:h-[4.5rem] sm:text-4xl",
+          size === "md" && "h-14 text-xl sm:text-2xl",
+          size === "lg" && "h-14 text-2xl sm:h-16 sm:text-3xl md:h-[4.5rem] md:text-4xl",
         )}
       >
         <CountryBand />

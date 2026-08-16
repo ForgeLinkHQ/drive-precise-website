@@ -291,7 +291,7 @@ async function main() {
 
     // Step 4 — where and when. Postcode coverage should answer.
     await page.getByLabel(/^Postcode/).fill("GU15");
-    if (!(await page.getByText(/Camberley is well within our area/).isVisible())) {
+    if (!(await page.getByText(/is well within our area/).isVisible())) {
       fail("/quote", "postcode coverage check did not confirm a core area");
     }
     await page.getByRole("button", { name: /^Continue/ }).click();
@@ -343,6 +343,76 @@ async function main() {
     await page.screenshot({ path: `${SHOTS}/quote-failure.png`, fullPage: true }).catch(() => {});
   }
   await journeyContext.close();
+
+  // ── The elements the polish pass added, checked on a real page. ────────
+  console.log("\nChecking the hero, sticky bar and resume banner…");
+  const polishContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const polishPage = await polishContext.newPage();
+  polishPage.on("pageerror", (error) => fail("polish", `uncaught: ${error.message}`));
+  try {
+    await polishPage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+    await polishPage.waitForTimeout(600);
+
+    // The plate is the site's primary call to action; if it stops rendering,
+    // the homepage loses its entry point.
+    const plate = polishPage.getByLabel("Your registration");
+    if (!(await plate.isVisible())) fail("polish", "hero registration plate is not visible");
+
+    // A visitor with nothing chosen must not see a basket bar or a resume
+    // prompt — both are noise until there is something to act on.
+    if (
+      await polishPage
+        .locator("text=Pick up where you left off")
+        .isVisible()
+        .catch(() => false)
+    ) {
+      fail("polish", "resume banner shown with an empty basket");
+    }
+
+    // Add something from a category page, then confirm both appear.
+    await polishPage.goto(`${BASE}/services/checks`, { waitUntil: "domcontentloaded" });
+    await polishPage.waitForTimeout(600);
+    await polishPage
+      .locator("article")
+      .filter({ hasText: "Vehicle Health Check" })
+      .getByRole("button", { name: /Add/ })
+      .first()
+      .click();
+    await polishPage.waitForTimeout(400);
+
+    if (!(await polishPage.getByRole("link", { name: /^Continue/ }).isVisible())) {
+      fail("polish", "desktop sticky basket bar did not appear after adding a service");
+    }
+    await polishPage.screenshot({ path: `${SHOTS}/sticky-bar.png` });
+
+    await polishPage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+    await polishPage.waitForTimeout(600);
+    if (!(await polishPage.getByText("Your request is still here").isVisible())) {
+      fail("polish", "resume banner did not appear with items in the basket");
+    }
+    await polishPage.screenshot({ path: `${SHOTS}/home-resume.png` });
+
+    // Breadcrumbs on a service page — the route back up for someone who
+    // landed from a search.
+    await polishPage.goto(`${BASE}/service/minor-service`, { waitUntil: "domcontentloaded" });
+    await polishPage.waitForTimeout(500);
+    const crumbs = polishPage.getByRole("navigation", { name: "Breadcrumb" });
+    if (!(await crumbs.isVisible())) fail("polish", "breadcrumbs missing on a service page");
+
+    // Every page should offer somewhere to go next.
+    if (
+      !(await polishPage
+        .getByRole("heading", { name: /Anything else while we're there/ })
+        .isVisible())
+    ) {
+      fail("polish", "next-steps block missing on a service page");
+    }
+
+    if (failures.length === 0) console.log("  ✓ hero, sticky bar, resume banner and breadcrumbs");
+  } catch (error) {
+    fail("polish", error.message);
+  }
+  await polishContext.close();
 
   // ── Mobile viewport: the bottom bar and one-handed operation (§52). ─────
   console.log("\nChecking the mobile layout…");

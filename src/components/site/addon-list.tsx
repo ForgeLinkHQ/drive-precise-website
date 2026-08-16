@@ -4,7 +4,7 @@ import { Check, Plus } from "lucide-react";
 import { PriceBadge } from "@/components/site/price-badge";
 import { Button } from "@/components/ui/button";
 import { suggestAddOns, suggestPartners, suggestionReason } from "@/lib/addons";
-import { addItem, hasItem, removeItem, useQuoteDraft } from "@/lib/basket";
+import { addItem, removeItem, useQuoteDraft } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
 import { PARTNER_BLURB, PARTNER_DISCLAIMER } from "@/lib/partners";
 import type { Service } from "@/lib/services";
@@ -50,7 +50,7 @@ export function AddOnList({ services }: { services: Service[] }) {
 
           <ul className="mt-6 grid gap-3 md:grid-cols-2">
             {suggestions.map((suggestion) => {
-              const added = hasItem(suggestion.service.id);
+              const added = draft.items.some((i) => i.id === suggestion.service.id);
               return (
                 <li
                   key={suggestion.service.id}

@@ -24,7 +24,7 @@
  * client render provably identical to the server's.
  */
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { SERVICES, getServiceById, type Service } from "./services";
 import { getPackageById, packageServices, type ServicePackage } from "./packages";
 import type { VehicleDetails } from "./vehicle";
@@ -125,21 +125,35 @@ function emit() {
 }
 
 function subscribe(onChange: () => void): () => void {
-  // First subscriber triggers the read from storage. Doing it here rather than
-  // at module scope keeps the server bundle from touching `window`, and keeps
-  // the first client render matching the server's empty draft.
-  if (!hydrated) {
-    hydrated = true;
-    const stored = readStorage();
-    if (stored) {
-      snapshot = stored;
-      queueMicrotask(emit);
-    }
-  }
   subscribers.add(onChange);
   return () => {
     subscribers.delete(onChange);
   };
+}
+
+/**
+ * Load the stored draft. Called from an effect, never from `subscribe`.
+ *
+ * This distinction caused a real hydration failure and is worth stating
+ * plainly. React calls `subscribe` during the commit that hydrates the tree,
+ * and it then re-reads `getSnapshot()`. Mutating the snapshot inside
+ * `subscribe` therefore changed the answer *mid-hydration* — the server had
+ * rendered an empty basket, the client suddenly had three items, and React
+ * threw #418 and discarded the server's markup.
+ *
+ * Running it in an effect means hydration completes against the same empty
+ * draft the server rendered, and the stored basket arrives one tick later as a
+ * normal update. The visible cost is a single frame without the resume banner,
+ * which is the correct trade for markup that actually hydrates.
+ */
+function hydrateFromStorage() {
+  if (hydrated) return;
+  hydrated = true;
+  const stored = readStorage();
+  if (stored) {
+    snapshot = stored;
+    emit();
+  }
 }
 
 function getSnapshot(): QuoteDraft {
@@ -171,7 +185,13 @@ export function resetDraft() {
 }
 
 export function useQuoteDraft(): QuoteDraft {
-  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const draft = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    hydrateFromStorage();
+  }, []);
+
+  return draft;
 }
 
 export function getDraft(): QuoteDraft {
@@ -205,8 +225,34 @@ export function toggleItem(kind: "service" | "package", id: string) {
   else addItem(kind, id);
 }
 
+/**
+ * Imperative read. Safe in event handlers; **not** safe during render.
+ *
+ * Use `useHasItem` in components. This reads the module singleton directly,
+ * and a component that calls it while rendering can observe a value React
+ * never saw — which is exactly the hydration failure described below.
+ */
 export function hasItem(id: string): boolean {
   return getDraft().items.some((i) => i.id === id);
+}
+
+/**
+ * Whether an item is in the basket, read through the subscribed snapshot.
+ *
+ * The distinction from `hasItem` is not stylistic; it cost a real hydration
+ * failure. During hydration React flushes the first mounted component's
+ * passive effects before the rest of the tree has hydrated. The header mounts
+ * first, its effect loaded the stored draft, and every service card *below* it
+ * then hydrated against a basket the server had never rendered — server said
+ * "Add", client said "Added", and React threw #418 and regenerated the tree.
+ *
+ * Deriving from the value `useSyncExternalStore` returned makes that
+ * impossible: React controls when that value changes, so a render can never
+ * observe a store mutation it wasn't told about.
+ */
+export function useHasItem(id: string): boolean {
+  const draft = useQuoteDraft();
+  return draft.items.some((i) => i.id === id);
 }
 
 export function setVehicle(vehicle: Partial<QuoteDraft["vehicle"]>) {

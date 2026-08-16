@@ -57,7 +57,7 @@ export function Hero() {
   return (
     <section className="band-deep on-deep">
       <div className="shell grid gap-10 py-14 lg:grid-cols-12 lg:gap-12 lg:py-24">
-        <div className="lg:col-span-7 lg:pr-8">
+        <div className="min-w-0 lg:col-span-7 lg:pr-8">
           <p className="text-xs font-semibold tracking-[0.18em] text-accent uppercase">
             {BUSINESS.descriptor}
           </p>
@@ -104,7 +104,7 @@ export function Hero() {
 
         {/* The plate card. Given its own surface so it reads as the thing to
             do, rather than as one element among several on the dark band. */}
-        <div className="lg:col-span-5">
+        <div className="min-w-0 lg:col-span-5">
           <div className="rounded-xl border border-[var(--color-deep-rule)] bg-[oklch(1_0_0_/_6%)] p-6 backdrop-blur-sm sm:p-7">
             <h2 className="font-display text-xl font-semibold">Start with your registration</h2>
             <p className="muted-on-deep mt-2 text-sm leading-relaxed">
