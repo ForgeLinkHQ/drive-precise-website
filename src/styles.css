@@ -1,0 +1,492 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system — Drive Precise.
+ *
+ * The brief that shapes this: it should feel like landing on a main dealer's
+ * site, with the attitude of the mobile specialist who actually looks after
+ * your family's cars. Two halves that pull against each other, and both have
+ * to win:
+ *
+ *   Main dealer  → a dark, confident opening; real depth and elevation;
+ *                  disciplined grid; tabular figures; nothing amateur.
+ *   Mobile spec. → warm plain English, prices on the page, no marble atrium,
+ *                  no stock photo of a handshake, no fake luxury.
+ *
+ * So: white and charcoal ground, one deep navy that carries the dealer weight,
+ * a single precise blue spent only where it means something, and a UK number
+ * plate as the signature device — the most recognisable object in this
+ * customer's world, and the first thing a dealer site asks you for.
+ *
+ * Explicitly not: boy-racer, cheap mechanic, generic WordPress garage, BMW
+ * corporate clone. No red. No carbon fibre. No neon.
+ *
+ * Accessibility (§49) is a constraint on the palette, not a coat of paint.
+ * --muted-foreground clears 4.5:1 on both --background and --muted, and there
+ * is no lighter body-text token because the brief forbids the thing it would
+ * be used for.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  /* The dark band. Its own tokens rather than reusing --primary, because the
+   * hero and the closing CTA need text, hairlines and a muted tone that all
+   * resolve against a dark ground — and those have no business changing when
+   * the button colour does. */
+  --color-deep: var(--deep);
+  --color-deep-2: var(--deep-2);
+  --color-deep-foreground: var(--deep-foreground);
+  --color-deep-muted: var(--deep-muted);
+  --color-deep-rule: var(--deep-rule);
+
+  /* Health-report statuses (§30). Named for meaning, not colour, so the report
+   * component can never paint "monitor" in the "action recommended" hue. */
+  --color-status-good: var(--status-good);
+  --color-status-good-wash: var(--status-good-wash);
+  --color-status-monitor: var(--status-monitor);
+  --color-status-monitor-wash: var(--status-monitor-wash);
+  --color-status-action: var(--status-action);
+  --color-status-action-wash: var(--status-action-wash);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display:
+    "Archivo", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-plate: "Charles Wright", "Archivo", ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: var(--elevation-1);
+  --shadow-lift: var(--elevation-2);
+  --shadow-panel: var(--elevation-3);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.23 0.014 258);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.23 0.014 258);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.23 0.014 258);
+
+  --primary: oklch(0.28 0.062 262);
+  --primary-foreground: oklch(0.99 0.002 250);
+
+  /* Cooled a touch and lightened so a section fill reads as a change of
+   * surface rather than a smudge. */
+  --secondary: oklch(0.972 0.004 250);
+  --secondary-foreground: oklch(0.28 0.062 262);
+
+  --muted: oklch(0.966 0.005 250);
+  --muted-foreground: oklch(0.468 0.021 258);
+
+  --accent: oklch(0.52 0.148 251);
+  --accent-foreground: oklch(0.99 0.002 250);
+
+  --destructive: oklch(0.52 0.19 27);
+  --destructive-foreground: oklch(0.99 0.002 250);
+
+  --border: oklch(0.912 0.005 253);
+  --border-strong: oklch(0.855 0.008 253);
+  --input: oklch(0.87 0.007 253);
+  --ring: oklch(0.52 0.148 251);
+
+  --deep: oklch(0.215 0.043 264);
+  --deep-2: oklch(0.163 0.036 265);
+  --deep-foreground: oklch(0.985 0.003 250);
+  --deep-muted: oklch(0.755 0.023 255);
+  --deep-rule: oklch(1 0 0 / 13%);
+
+  --status-good: oklch(0.49 0.126 152);
+  --status-good-wash: oklch(0.955 0.032 152);
+  --status-monitor: oklch(0.55 0.118 72);
+  --status-monitor-wash: oklch(0.96 0.038 78);
+  --status-action: oklch(0.52 0.19 27);
+  --status-action-wash: oklch(0.958 0.028 25);
+
+  /*
+   * Elevation. Two stacked shadows each — a tight contact shadow and a wide
+   * ambient one — because a single blur reads as a sticker and this has to
+   * look like it was designed by someone who has seen a dealer site.
+   * Tinted toward the navy rather than pure black, so a lifted card sits in
+   * the same light as everything around it.
+   */
+  --elevation-1:
+    0 1px 2px oklch(0.28 0.062 262 / 6%), 0 1px 3px oklch(0.28 0.062 262 / 4%);
+  --elevation-2:
+    0 2px 4px oklch(0.28 0.062 262 / 6%), 0 8px 20px -6px oklch(0.28 0.062 262 / 12%);
+  --elevation-3:
+    0 4px 8px oklch(0.28 0.062 262 / 7%), 0 20px 44px -12px oklch(0.28 0.062 262 / 18%);
+}
+
+.dark {
+  --background: oklch(0.178 0.019 262);
+  --foreground: oklch(0.97 0.003 250);
+
+  --card: oklch(0.222 0.023 262);
+  --card-foreground: oklch(0.97 0.003 250);
+  --popover: oklch(0.222 0.023 262);
+  --popover-foreground: oklch(0.97 0.003 250);
+
+  --primary: oklch(0.97 0.003 250);
+  --primary-foreground: oklch(0.178 0.019 262);
+
+  --secondary: oklch(0.245 0.025 262);
+  --secondary-foreground: oklch(0.97 0.003 250);
+
+  --muted: oklch(0.245 0.025 262);
+  --muted-foreground: oklch(0.755 0.021 255);
+
+  --accent: oklch(0.685 0.132 249);
+  --accent-foreground: oklch(0.178 0.019 262);
+
+  --destructive: oklch(0.68 0.17 25);
+  --destructive-foreground: oklch(0.178 0.019 262);
+
+  --border: oklch(1 0 0 / 11%);
+  --border-strong: oklch(1 0 0 / 18%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.685 0.132 249);
+
+  --deep: oklch(0.145 0.028 265);
+  --deep-2: oklch(0.115 0.022 265);
+  --deep-foreground: oklch(0.985 0.003 250);
+  --deep-muted: oklch(0.735 0.023 255);
+  --deep-rule: oklch(1 0 0 / 11%);
+
+  --status-good: oklch(0.7 0.14 152);
+  --status-good-wash: oklch(0.28 0.06 152);
+  --status-monitor: oklch(0.76 0.13 78);
+  --status-monitor-wash: oklch(0.3 0.06 75);
+  --status-action: oklch(0.68 0.17 25);
+  --status-action-wash: oklch(0.3 0.08 25);
+
+  --elevation-1: 0 1px 2px oklch(0 0 0 / 40%), 0 1px 3px oklch(0 0 0 / 26%);
+  --elevation-2: 0 2px 4px oklch(0 0 0 / 34%), 0 8px 20px -6px oklch(0 0 0 / 46%);
+  --elevation-3: 0 4px 8px oklch(0 0 0 / 36%), 0 20px 44px -12px oklch(0 0 0 / 56%);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    /* The header is sticky, so an in-page anchor would otherwise land with its
+     * heading tucked underneath it. */
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.024em;
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  h1 {
+    letter-spacing: -0.032em;
+  }
+
+  /* Any figure that lines up in a column — prices, mileages, totals — gets
+   * even widths, so a basket doesn't jitter as items are added. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * A visible focus ring on everything focusable, always. §49 asks for
+   * keyboard navigation to work, and the browser default disappears against
+   * several of the surfaces above.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* Inside the dark band the accent ring has too little contrast; the paper
+   * colour is the readable choice there. */
+  .on-deep :focus-visible {
+    outline-color: var(--color-deep-foreground);
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--color-accent) 24%, transparent);
+  }
+
+  /*
+   * "No unnecessary animation" (§49). What survives is colour and a 1–2px
+   * lift on hover, which carries almost no motion — and all of it stops here
+   * for anyone who has asked it to.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ── Utilities ─────────────────────────────────────────────────────────── */
+
+@utility eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+/*
+ * Minimum touch target (§49, §52). 44px is the WCAG 2.5.5 figure. Applied to
+ * small icon-only controls, which are the ones that would otherwise fall short.
+ */
+@utility tap {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/*
+ * Space for the fixed mobile bar (§52), so the last thing on a page is never
+ * trapped underneath it. env() keeps it clear of the iOS home indicator too.
+ */
+@utility pb-mobile-bar {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+
+  @variant lg {
+    padding-bottom: 0;
+  }
+}
+
+/* The standard page gutter, so every section lines up down the page. */
+@utility shell {
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: 1rem;
+
+  @variant md {
+    padding-inline: 1.5rem;
+  }
+
+  @variant lg {
+    padding-inline: 2rem;
+  }
+}
+
+/*
+ * The dark band: hero, closing CTA, trade masthead.
+ *
+ * A two-stop gradient plus a faint engineered grid. The grid is the restrained
+ * version of the texture a dealer site would carry as a photograph — it reads
+ * as precision at a glance and as nothing at all up close, which is the point.
+ * Inlined as a data URI because the artifact CSP blocks external hosts and a
+ * missing background here would leave white text on white.
+ */
+@utility band-deep {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-deep);
+  background-image:
+    radial-gradient(
+      110% 85% at 82% 0%,
+      color-mix(in oklch, var(--color-accent) 26%, transparent) 0%,
+      transparent 62%
+    ),
+    linear-gradient(178deg, var(--color-deep) 0%, var(--color-deep-2) 100%);
+  color: var(--color-deep-foreground);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 4%) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 4%) 1px, transparent 1px);
+    background-size: 64px 64px;
+    /* Fades out toward the bottom so the grid never competes with the copy
+     * sitting on it. */
+    mask-image: linear-gradient(to bottom, black 0%, transparent 78%);
+    pointer-events: none;
+  }
+}
+
+/* Text colours that resolve against the dark band. */
+@utility on-deep {
+  color: var(--color-deep-foreground);
+
+  & .muted-on-deep {
+    color: var(--color-deep-muted);
+  }
+}
+
+/*
+ * A card that responds to the pointer.
+ *
+ * The lift is 2px and the shadow change is one step. Anything more and a grid
+ * of twelve service cards becomes a trampoline — dealer polish is restraint,
+ * not enthusiasm.
+ */
+@utility card-lift {
+  transition:
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+
+  @media (hover: hover) {
+    &:hover {
+      border-color: var(--color-border-strong);
+      box-shadow: var(--elevation-2);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/*
+ * A UK number plate.
+ *
+ * The signature device of the whole site. It is the object every driver can
+ * identify from across a car park, it is the one thing we ask for before
+ * anything else, and rendering it properly is the difference between a form
+ * field and a site that knows what business it is in.
+ *
+ * Front plate (white) rather than rear (yellow): it is what you look at when
+ * you walk up to a car, and white keeps the input legible at body-text
+ * contrast. The blue band with the country mark is drawn in CSS rather than
+ * fetched, so it survives the CSP and costs no request.
+ */
+@utility plate {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  background: #f7f7f4;
+  color: #16161a;
+  border: 2px solid #16161a;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  font-family: var(--font-plate);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: var(--elevation-1);
+}
+
+@utility plate-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  background: #063298;
+  color: #f7d117;
+  padding-inline: 0.5rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  flex: none;
+}
+
+/* The twelve gold stars are a EU-era detail and no longer correct on a UK
+ * plate; the country mark alone is what a current plate carries. */
+@utility plate-mark {
+  font-size: 0.7rem;
+  line-height: 1;
+  color: #f7f7f4;
+  font-weight: 700;
+}
+
+/*
+ * Section rhythm.
+ *
+ * One utility rather than per-section padding, so the vertical beat is
+ * identical on twenty-six pages and a new page cannot drift out of time.
+ */
+@utility section-y {
+  padding-block: 3.5rem;
+
+  @variant md {
+    padding-block: 4.5rem;
+  }
+
+  @variant lg {
+    padding-block: 5.5rem;
+  }
+}
+
+@utility section-y-sm {
+  padding-block: 2.5rem;
+
+  @variant md {
+    padding-block: 3.25rem;
+  }
+}
+
+/* A hairline that carries a short accent lead-in — used above section
+ * headings to give the grid a visible spine without a decorative rail on
+ * every card. */
+@utility rule-accent {
+  border-top: 1px solid var(--color-border);
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 3rem;
+    height: 2px;
+    background: var(--color-accent);
+  }
+}
