@@ -4,6 +4,14 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { EnquiryRow } from "@/integrations/supabase/types";
 import {
@@ -286,179 +294,174 @@ function EnquiryDetail({
     .filter((line) => line !== null)
     .join("\n");
 
+  // A real modal, not a positioned div. The previous version trapped no focus,
+  // ignored Escape, left the page behind scrolling and never returned focus to
+  // the row that opened it — which on a phone made it genuinely hard to close.
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Enquiry ${enquiry.reference}`}
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="mx-auto max-w-2xl rounded-lg border border-border bg-card p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="font-mono text-sm text-muted-foreground">{enquiry.reference}</p>
-            <h2 className="mt-1 text-2xl">{enquiry.customer_name}</h2>
-            <p className="mt-1 text-muted-foreground">
-              {enquiry.customer_phone}
-              {enquiry.customer_email && ` · ${enquiry.customer_email}`}
-            </p>
-          </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Close
-          </Button>
-        </div>
-
-        <dl className="mt-6 grid gap-4 sm:grid-cols-2">
-          <Detail label="Vehicle">
-            <span className="font-mono">{formatRegistration(enquiry.registration)}</span>
-            {enquiry.mileage && ` · ${formatMileage(enquiry.mileage)} miles`}
-          </Detail>
-          <Detail label="Where">
-            {enquiry.service_location
-              ? LOCATION_LABEL[enquiry.service_location as keyof typeof LOCATION_LABEL]
-              : "Not said"}
-            {enquiry.postcode && ` · ${enquiry.postcode}`}
-          </Detail>
-          <Detail label="Preferred">
-            {enquiry.preferred_date ?? "No preference"}
-            {enquiry.preferred_window && ` · ${enquiry.preferred_window}`}
-          </Detail>
-          <Detail label="Found us via">
-            {enquiry.referral_source
-              ? (REFERRAL_SOURCE_LABEL[enquiry.referral_source as ReferralSource] ??
-                enquiry.referral_source)
-              : "Unknown"}
-            {enquiry.campaign && ` · ${enquiry.campaign}`}
-          </Detail>
-        </dl>
-
-        <section className="mt-6">
-          <h3 className="text-sm font-medium text-muted-foreground">Work requested</h3>
-          <ul className="mt-2 space-y-1.5">
-            {items.map((item) => (
-              <li key={item.id} className="flex justify-between gap-4">
-                <span>{item.name}</span>
-                <span className="text-muted-foreground">
-                  {item.pricing === "quote" || item.priceGbp === undefined
-                    ? "Quote"
-                    : `${item.pricing === "from" ? "from " : ""}${formatGbp(item.priceGbp)}`}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Website estimate: {formatGbp(Number(enquiry.indicative_total_gbp))}
-            {enquiry.has_from_pricing && " (indicative)"}
-            {enquiry.quote_only_count > 0 && ` · ${enquiry.quote_only_count} to quote`}
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent aria-label={`Enquiry ${enquiry.reference}`}>
+        <DialogHeader>
+          <p className="font-mono text-sm text-muted-foreground">{enquiry.reference}</p>
+          <DialogTitle className="mt-1 text-2xl">{enquiry.customer_name}</DialogTitle>
+          <p className="mt-1 text-muted-foreground">
+            {enquiry.customer_phone}
+            {enquiry.customer_email && ` · ${enquiry.customer_email}`}
           </p>
-        </section>
+        </DialogHeader>
 
-        {(enquiry.customer_notes || enquiry.vehicle_notes) && (
-          <section className="mt-6 rounded-md bg-secondary p-4">
-            {enquiry.vehicle_notes && (
-              <p className="text-sm">
-                <span className="font-medium">About the car:</span> {enquiry.vehicle_notes}
-              </p>
-            )}
-            {enquiry.customer_notes && (
-              <p className="mt-2 text-sm">
-                <span className="font-medium">Notes:</span> {enquiry.customer_notes}
-              </p>
-            )}
+        <DialogBody>
+          <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+            <Detail label="Vehicle">
+              <span className="font-mono">{formatRegistration(enquiry.registration)}</span>
+              {enquiry.mileage && ` · ${formatMileage(enquiry.mileage)} miles`}
+            </Detail>
+            <Detail label="Where">
+              {enquiry.service_location
+                ? LOCATION_LABEL[enquiry.service_location as keyof typeof LOCATION_LABEL]
+                : "Not said"}
+              {enquiry.postcode && ` · ${enquiry.postcode}`}
+            </Detail>
+            <Detail label="Preferred">
+              {enquiry.preferred_date ?? "No preference"}
+              {enquiry.preferred_window && ` · ${enquiry.preferred_window}`}
+            </Detail>
+            <Detail label="Found us via">
+              {enquiry.referral_source
+                ? (REFERRAL_SOURCE_LABEL[enquiry.referral_source as ReferralSource] ??
+                  enquiry.referral_source)
+                : "Unknown"}
+              {enquiry.campaign && ` · ${enquiry.campaign}`}
+            </Detail>
+          </dl>
+
+          <section className="mt-6">
+            <h3 className="text-sm font-medium text-muted-foreground">Work requested</h3>
+            <ul className="mt-2 space-y-1.5">
+              {items.map((item) => (
+                <li key={item.id} className="flex justify-between gap-4">
+                  <span>{item.name}</span>
+                  <span className="text-muted-foreground">
+                    {item.pricing === "quote" || item.priceGbp === undefined
+                      ? "Quote"
+                      : `${item.pricing === "from" ? "from " : ""}${formatGbp(item.priceGbp)}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Website estimate: {formatGbp(Number(enquiry.indicative_total_gbp))}
+              {enquiry.has_from_pricing && " (indicative)"}
+              {enquiry.quote_only_count > 0 && ` · ${enquiry.quote_only_count} to quote`}
+            </p>
           </section>
-        )}
 
-        <div className="mt-6 space-y-5 border-t border-border pt-6">
-          <Field label="Status">
-            {(props) => (
-              <Select {...props} value={status} onChange={(e) => setStatus(e.target.value)}>
-                {(Object.keys(ENQUIRY_STATUS_LABEL) as EnquiryStatus[]).map((value) => (
-                  <option key={value} value={value}>
-                    {ENQUIRY_STATUS_LABEL[value]}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Quoted total (£)" hint="What you actually quoted, once you knew the car.">
-              {(props) => (
-                <Input
-                  {...props}
-                  inputMode="decimal"
-                  value={quotedTotal}
-                  onChange={(e) => setQuotedTotal(e.target.value)}
-                />
+          {(enquiry.customer_notes || enquiry.vehicle_notes) && (
+            <section className="mt-6 rounded-md bg-secondary p-4">
+              {enquiry.vehicle_notes && (
+                <p className="text-sm">
+                  <span className="font-medium">About the car:</span> {enquiry.vehicle_notes}
+                </p>
               )}
-            </Field>
-            <Field label="TechMan reference" hint="Once the job exists in TechMan.">
-              {(props) => (
-                <Input
-                  {...props}
-                  value={techmanRef}
-                  onChange={(e) => setTechmanRef(e.target.value)}
-                />
+              {enquiry.customer_notes && (
+                <p className="mt-2 text-sm">
+                  <span className="font-medium">Notes:</span> {enquiry.customer_notes}
+                </p>
               )}
-            </Field>
-          </div>
-
-          {status === "lost" && (
-            <Field label="Why was it lost?" hint="Worth knowing. Price, timing, went elsewhere…">
-              {(props) => (
-                <Input
-                  {...props}
-                  value={lostReason}
-                  onChange={(e) => setLostReason(e.target.value)}
-                />
-              )}
-            </Field>
+            </section>
           )}
 
-          <Field label="Internal notes">
-            {(props) => (
-              <Textarea
-                {...props}
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-              />
+          <div className="mt-6 space-y-5 border-t border-border pt-6">
+            <Field label="Status">
+              {(props) => (
+                <Select {...props} value={status} onChange={(e) => setStatus(e.target.value)}>
+                  {(Object.keys(ENQUIRY_STATUS_LABEL) as EnquiryStatus[]).map((value) => (
+                    <option key={value} value={value}>
+                      {ENQUIRY_STATUS_LABEL[value]}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field
+                label="Quoted total (£)"
+                hint="What you actually quoted, once you knew the car."
+              >
+                {(props) => (
+                  <Input
+                    {...props}
+                    inputMode="decimal"
+                    value={quotedTotal}
+                    onChange={(e) => setQuotedTotal(e.target.value)}
+                  />
+                )}
+              </Field>
+              <Field label="TechMan reference" hint="Once the job exists in TechMan.">
+                {(props) => (
+                  <Input
+                    {...props}
+                    value={techmanRef}
+                    onChange={(e) => setTechmanRef(e.target.value)}
+                  />
+                )}
+              </Field>
+            </div>
+
+            {status === "lost" && (
+              <Field label="Why was it lost?" hint="Worth knowing. Price, timing, went elsewhere…">
+                {(props) => (
+                  <Input
+                    {...props}
+                    value={lostReason}
+                    onChange={(e) => setLostReason(e.target.value)}
+                  />
+                )}
+              </Field>
             )}
-          </Field>
 
-          <details className="rounded-md border border-border p-4">
-            <summary className="cursor-pointer text-sm font-medium">Copy for TechMan</summary>
-            <pre className="mt-3 overflow-x-auto rounded bg-secondary p-3 text-xs whitespace-pre-wrap">
-              {handoff}
-            </pre>
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-3"
-              onClick={() => {
-                void navigator.clipboard
-                  .writeText(handoff)
-                  .then(() => toast.success("Copied"))
-                  .catch(() => toast.error("Couldn't copy — select the text instead."));
-              }}
-            >
-              Copy to clipboard
-            </Button>
-          </details>
+            <Field label="Internal notes">
+              {(props) => (
+                <Textarea
+                  {...props}
+                  value={adminNotes}
+                  onChange={(e) => setAdminNotes(e.target.value)}
+                />
+              )}
+            </Field>
 
-          <div className="flex gap-3">
-            <Button onClick={save} disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </Button>
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
+            <details className="rounded-md border border-border p-4">
+              <summary className="cursor-pointer text-sm font-medium">Copy for TechMan</summary>
+              <pre className="mt-3 overflow-x-auto rounded bg-secondary p-3 text-xs whitespace-pre-wrap">
+                {handoff}
+              </pre>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3"
+                onClick={() => {
+                  void navigator.clipboard
+                    .writeText(handoff)
+                    .then(() => toast.success("Copied"))
+                    .catch(() => toast.error("Couldn't copy — select the text instead."));
+                }}
+              >
+                Copy to clipboard
+              </Button>
+            </details>
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogBody>
+
+        <DialogFooter>
+          <Button onClick={save} disabled={saving}>
+            {saving ? "Saving…" : "Save"}
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

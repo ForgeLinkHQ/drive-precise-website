@@ -54,9 +54,9 @@ export function AddOnList({ services }: { services: Service[] }) {
               return (
                 <li
                   key={suggestion.service.id}
-                  className="flex flex-col rounded-lg border border-border bg-card p-4"
+                  className="card-lift flex flex-col rounded-lg border border-border bg-card p-4 shadow-card"
                 >
-                  <p className="text-xs font-medium uppercase tracking-wide text-accent">
+                  <p className="inline-flex w-fit rounded-full bg-accent/10 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-accent uppercase">
                     {suggestionReason(suggestion)}
                   </p>
                   <h3 className="mt-2 font-medium">{suggestion.service.name}</h3>

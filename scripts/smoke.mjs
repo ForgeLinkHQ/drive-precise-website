@@ -414,6 +414,125 @@ async function main() {
   }
   await polishContext.close();
 
+  // ── Overlays and menus. These are the pieces a route-level check cannot
+  //    see: they only exist once something is opened. ─────────────────────
+  console.log("\nChecking overlays, menus and the mobile builder bar…");
+  const uiContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const uiPage = await uiContext.newPage();
+  uiPage.on("pageerror", (error) => fail("interactions", `uncaught: ${error.message}`));
+  uiPage.on("console", (m) => {
+    if (m.type() === "error" && !isExpectedNoise(m.text())) {
+      fail("interactions", `console error: ${m.text()}`);
+    }
+  });
+
+  try {
+    await uiPage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+    await uiPage.waitForTimeout(700);
+
+    // Services mega-panel.
+    await uiPage.getByRole("button", { name: "Services" }).first().click();
+    await uiPage.waitForTimeout(350);
+    if (!(await uiPage.getByRole("link", { name: /Every service, with prices/ }).isVisible())) {
+      fail("interactions", "services mega-panel did not open");
+    }
+    await uiPage.screenshot({ path: `${SHOTS}/nav-megamenu.png` });
+    await uiPage.keyboard.press("Escape");
+
+    // Search overlay, opened from the keyboard the way it is advertised.
+    await uiPage.keyboard.press("Control+k");
+    await uiPage.waitForTimeout(350);
+    const searchBox = uiPage.getByRole("searchbox", { name: "Search services" });
+    if (!(await searchBox.isVisible()))
+      fail("interactions", "search overlay did not open on Ctrl+K");
+    await searchBox.fill("knocking");
+    await uiPage.waitForTimeout(300);
+    if (!(await uiPage.getByText("Suspension & Handling Check").first().isVisible())) {
+      fail("interactions", "search overlay returned no result for a symptom word");
+    }
+    await uiPage.screenshot({ path: `${SHOTS}/search-overlay.png` });
+
+    // Enter navigates to the highlighted result.
+    await uiPage.keyboard.press("Enter");
+    await uiPage.waitForURL(/\/service\//, { timeout: 10_000 });
+    await uiPage.waitForTimeout(400);
+    if (!(await uiPage.getByRole("navigation", { name: "Breadcrumb" }).isVisible())) {
+      fail("interactions", "search result did not land on a service page");
+    }
+
+    // Escape must close the overlay rather than leaving it stuck open.
+    await uiPage.keyboard.press("Control+k");
+    await uiPage.waitForTimeout(250);
+    await uiPage.keyboard.press("Escape");
+    await uiPage.waitForTimeout(250);
+    if (
+      await uiPage
+        .getByRole("searchbox", { name: "Search services" })
+        .isVisible()
+        .catch(() => false)
+    ) {
+      fail("interactions", "Escape did not close the search overlay");
+    }
+
+    if (failures.length === 0) console.log("  ✓ mega-panel, search overlay and keyboard control");
+  } catch (error) {
+    fail("interactions", error.message);
+  }
+  await uiContext.close();
+
+  // Mobile menu sheet and the builder's summary bar.
+  const sheetContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const sheetPage = await sheetContext.newPage();
+  sheetPage.on("pageerror", (error) => fail("mobile menu", `uncaught: ${error.message}`));
+  try {
+    await sheetPage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+    await sheetPage.waitForTimeout(700);
+
+    await sheetPage.getByRole("button", { name: "Open menu" }).click();
+    await sheetPage.waitForTimeout(400);
+    const sheet = sheetPage.getByRole("dialog");
+    if (!(await sheet.isVisible())) fail("mobile menu", "menu sheet did not open");
+    if (!(await sheet.getByRole("link", { name: "Checks & Inspections" }).isVisible())) {
+      fail("mobile menu", "menu sheet is missing its service links");
+    }
+    await sheetPage.screenshot({ path: `${SHOTS}/mobile-menu.png` });
+
+    await sheetPage.keyboard.press("Escape");
+    await sheetPage.waitForTimeout(400);
+    if (
+      await sheetPage
+        .getByRole("dialog")
+        .isVisible()
+        .catch(() => false)
+    ) {
+      fail("mobile menu", "Escape did not close the menu sheet");
+    }
+
+    // The builder's mobile summary bar only exists once something is chosen.
+    await sheetPage.goto(`${BASE}/quote?add=vehicle-health-check`, {
+      waitUntil: "domcontentloaded",
+    });
+    await sheetPage.waitForTimeout(900);
+    if (!(await sheetPage.getByRole("button", { name: "Show your full request" }).isVisible())) {
+      fail("mobile menu", "builder summary bar did not appear with an item in the basket");
+    }
+    await sheetPage.getByRole("button", { name: "Show your full request" }).click();
+    await sheetPage.waitForTimeout(400);
+    if (!(await sheetPage.getByRole("dialog").isVisible())) {
+      fail("mobile menu", "basket sheet did not open from the summary bar");
+    }
+    await sheetPage.screenshot({ path: `${SHOTS}/mobile-basket-sheet.png` });
+
+    if (failures.length === 0) console.log("  ✓ mobile menu sheet and builder summary bar");
+  } catch (error) {
+    fail("mobile menu", error.message);
+  }
+  await sheetContext.close();
+
   // ── Mobile viewport: the bottom bar and one-handed operation (§52). ─────
   console.log("\nChecking the mobile layout…");
   const mobile = await browser.newContext({

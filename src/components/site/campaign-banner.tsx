@@ -56,7 +56,7 @@ export function CampaignBanner() {
 
   return (
     <div className="border-b border-accent/20 bg-accent/8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+      <div className="shell flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-medium">{campaign.headline}</p>
           {campaign.body && <p className="mt-0.5 text-sm text-muted-foreground">{campaign.body}</p>}

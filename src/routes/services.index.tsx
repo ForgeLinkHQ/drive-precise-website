@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { PageHeader } from "@/components/site/page-header";
 import { ServiceCard } from "@/components/site/service-card";
+import { RecentlyViewed } from "@/components/site/recently-viewed";
 import { pageMeta } from "@/lib/seo";
 import { useCatalogue } from "@/lib/service-catalog";
 import {
@@ -41,6 +42,10 @@ function ServicesIndex() {
         />
 
         <div className="shell py-10 lg:py-14">
+          <div className="mb-10 empty:mb-0">
+            <RecentlyViewed />
+          </div>
+
           <nav aria-label="Service categories" className="flex flex-wrap gap-2">
             {CATEGORY_ORDER.map((category) => (
               <a

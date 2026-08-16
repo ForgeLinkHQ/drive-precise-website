@@ -54,7 +54,7 @@ export function SymptomRouter() {
 }
 
 const LINK_CLASS =
-  "group flex min-h-[72px] w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left transition-colors hover:border-accent hover:bg-secondary/60";
+  "card-lift group flex min-h-[76px] w-full items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left shadow-card hover:border-accent";
 
 /**
  * One option, as a typed router link.

@@ -123,22 +123,25 @@ function FaqPage() {
         />
 
         <div className="mx-auto max-w-3xl px-4 py-10 lg:px-8 lg:py-14">
-          <div className="divide-y divide-border">
+          <div className="space-y-3">
             {FAQS.map((faq) => (
               // <details> rather than a JS accordion: it works before hydration,
               // it is keyboard-operable and screen-reader-announced for free,
               // and Ctrl+F finds the text inside a closed one in most browsers.
-              <details key={faq.q} className="group py-5">
-                <summary className="flex cursor-pointer items-start justify-between gap-4 text-lg font-medium">
+              <details
+                key={faq.q}
+                className="group rounded-lg border border-border bg-card px-5 shadow-card transition-colors hover:border-border-strong"
+              >
+                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 py-5 text-[17px] font-medium [&::-webkit-details-marker]:hidden">
                   {faq.q}
                   <span
-                    className="mt-1.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-45"
+                    className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border border-border text-muted-foreground transition-transform duration-200 group-open:rotate-45 group-open:border-accent group-open:text-accent"
                     aria-hidden="true"
                   >
                     +
                   </span>
                 </summary>
-                <p className="mt-3 leading-relaxed text-muted-foreground">{faq.a}</p>
+                <p className="pb-5 leading-relaxed text-muted-foreground">{faq.a}</p>
               </details>
             ))}
           </div>

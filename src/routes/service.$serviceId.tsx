@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Check, Plus } from "lucide-react";
 
 import { SiteHeader } from "@/components/site/site-header";
@@ -8,6 +9,7 @@ import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { ServiceCard } from "@/components/site/service-card";
 import { Breadcrumbs } from "@/components/site/breadcrumbs";
 import { NextSteps } from "@/components/site/next-steps";
+import { RecentlyViewed } from "@/components/site/recently-viewed";
 import { Button } from "@/components/ui/button";
 import { pageMeta, serviceJsonLd } from "@/lib/seo";
 import { useCatalogue } from "@/lib/service-catalog";
@@ -22,6 +24,7 @@ import {
 } from "@/lib/services";
 import { addItem, removeItem, useHasItem } from "@/lib/basket";
 import { trackEvent } from "@/lib/analytics";
+import { recordView } from "@/lib/recently-viewed";
 import { PARTNER_BLURB } from "@/lib/partners";
 
 export const Route = createFileRoute("/service/$serviceId")({
@@ -68,6 +71,14 @@ function ServicePage() {
   const live = services.find((s) => s.id === service.id) ?? service;
 
   const added = useHasItem(live.id);
+
+  // In an effect, not during render: this writes to storage and notifies a
+  // store, and doing either while rendering is how you get a tree that
+  // disagrees with the HTML the server sent.
+  useEffect(() => {
+    recordView(live.id);
+    trackEvent("service_page_view", { itemId: live.id });
+  }, [live.id]);
 
   const related = relatedServices(live, services);
 
@@ -177,7 +188,7 @@ function ServicePage() {
           </div>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-lg border border-border bg-card p-6">
+            <div className="rounded-lg border border-border bg-card p-6 shadow-card">
               <PriceBadge
                 pricing={live.pricing}
                 priceGbp={live.priceGbp}
@@ -229,6 +240,10 @@ function ServicePage() {
               </div>
             </div>
           </aside>
+        </div>
+
+        <div className="shell pb-10 lg:pb-14">
+          <RecentlyViewed exclude={live.id} />
         </div>
 
         <NextSteps

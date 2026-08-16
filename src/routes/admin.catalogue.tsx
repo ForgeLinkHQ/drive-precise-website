@@ -114,7 +114,7 @@ function AdminCatalogue() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-6">
+        <div className="rounded-lg border border-border bg-card p-6 shadow-card">
           <h2 className="font-display text-lg font-semibold">The built-in catalogue</h2>
           <p className="mt-3 text-muted-foreground">
             The site is currently serving the catalogue compiled into the app. It works, and

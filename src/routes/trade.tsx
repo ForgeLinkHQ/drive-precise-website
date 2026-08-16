@@ -193,7 +193,7 @@ function TradeForm() {
 
   if (reference) {
     return (
-      <div className="rounded-lg border border-border bg-card p-6">
+      <div className="rounded-lg border border-border bg-card p-6 shadow-card">
         <h2 className="font-display text-2xl">Thanks — that's with us</h2>
         <p className="mt-3 text-muted-foreground">
           Your reference is <strong className="font-mono text-foreground">{reference}</strong>.
@@ -205,7 +205,7 @@ function TradeForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded-lg border border-border bg-card p-6">
+    <form onSubmit={onSubmit} className="rounded-lg border border-border bg-card p-6 shadow-card">
       <h2 className="font-display text-2xl">Discuss trade work</h2>
       <p className="mt-2 text-muted-foreground">
         Tell us roughly what you're dealing with and we'll come back with something concrete.

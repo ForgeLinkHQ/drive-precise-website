@@ -34,7 +34,7 @@ function ContactPage() {
 
         <div className="shell py-10 lg:py-14">
           <div className="grid gap-6 md:grid-cols-3">
-            <div className="rounded-lg border border-border bg-card p-6">
+            <div className="rounded-lg border border-border bg-card p-6 shadow-card">
               <MessageCircle className="size-6 text-accent" aria-hidden="true" />
               <h2 className="mt-4 font-display text-lg font-semibold">WhatsApp</h2>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -45,7 +45,7 @@ function ContactPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-6">
+            <div className="rounded-lg border border-border bg-card p-6 shadow-card">
               <Phone className="size-6 text-accent" aria-hidden="true" />
               <h2 className="mt-4 font-display text-lg font-semibold">Phone</h2>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -56,7 +56,7 @@ function ContactPage() {
               </Button>
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-6">
+            <div className="rounded-lg border border-border bg-card p-6 shadow-card">
               <Mail className="size-6 text-accent" aria-hidden="true" />
               <h2 className="mt-4 font-display text-lg font-semibold">Email</h2>
               <p className="mt-2 text-sm text-muted-foreground">

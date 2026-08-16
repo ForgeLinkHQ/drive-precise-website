@@ -64,7 +64,10 @@ function ReturnToStandardPage() {
             </h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {REASONS.map((reason) => (
-                <div key={reason.title} className="rounded-lg border border-border bg-card p-5">
+                <div
+                  key={reason.title}
+                  className="rounded-lg border border-border bg-card p-5 shadow-card"
+                >
                   <h3 className="font-display text-lg font-semibold">{reason.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {reason.body}

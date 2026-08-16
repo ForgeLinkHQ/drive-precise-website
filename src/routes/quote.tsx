@@ -10,7 +10,8 @@ import { ServiceCard } from "@/components/site/service-card";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
-import { RegPlateInput } from "@/components/site/reg-plate";
+import { RegPlate, RegPlateInput } from "@/components/site/reg-plate";
+import { BuilderSummaryBar } from "@/components/site/builder-summary-bar";
 import { pageMeta } from "@/lib/seo";
 import { useCatalogue } from "@/lib/service-catalog";
 import {
@@ -191,11 +192,37 @@ function QuotePage() {
               Tell us about the car and what you'd like doing. We'll confirm the exact price for
               your vehicle before anything is booked.
             </p>
+            {/* A rail as well as chips. The chips say which step; the rail
+                says how much is left, which is what stops someone abandoning
+                at step three thinking there are ten. */}
+            <div className="mt-6 max-w-md">
+              <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  Step {stepIndex + 1} of {STEPS.length} · {STEPS[stepIndex].label}
+                </span>
+                <span className="tabular">
+                  About {Math.max(1, STEPS.length - stepIndex)} min left
+                </span>
+              </div>
+              <div
+                className="mt-2 h-1.5 overflow-hidden rounded-full bg-border"
+                role="progressbar"
+                aria-valuemin={1}
+                aria-valuemax={STEPS.length}
+                aria-valuenow={stepIndex + 1}
+                aria-label="Quote progress"
+              >
+                <div
+                  className="h-full rounded-full bg-accent transition-[width] duration-300"
+                  style={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
+                />
+              </div>
+            </div>
             <StepIndicator current={stepIndex} onJump={(id) => goTo(id)} />
           </div>
         </div>
 
-        <div className="shell grid gap-8 py-10 lg:grid-cols-3 lg:py-14">
+        <div className="shell grid gap-8 py-10 pb-28 lg:grid-cols-3 lg:py-14 lg:pb-14">
           <div className="lg:col-span-2">
             {step === "vehicle" && <VehicleStep errors={errors} onNext={() => goTo("services")} />}
             {step === "services" && (
@@ -235,7 +262,7 @@ function QuotePage() {
             )}
           </div>
 
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+          <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
             <BasketPanel
               services={services}
               onEmptyAction={
@@ -250,10 +277,36 @@ function QuotePage() {
         </div>
       </main>
 
+      {/* The mobile equivalent of the sticky column above. Its primary action
+          mirrors the step's own Continue button rather than duplicating the
+          logic, so the two can never disagree about whether you may proceed. */}
+      <BuilderSummaryBar
+        services={services}
+        onContinue={NEXT_STEP[step] ? () => goTo(NEXT_STEP[step]!) : undefined}
+        continueLabel={step === "details" ? "Review" : "Continue"}
+        continueDisabled={step === "vehicle" && !draft.vehicle.registration.trim()}
+      />
+
       <SiteFooter />
     </div>
   );
 }
+
+/**
+ * Which step follows which.
+ *
+ * A lookup rather than an index shift, so the mobile bar and the in-page
+ * buttons agree by construction. `review` maps to nothing — the last step's
+ * action is submitting, which needs validation the bar doesn't do.
+ */
+const NEXT_STEP: Record<StepId, StepId | undefined> = {
+  vehicle: "services",
+  services: "extras",
+  extras: "location",
+  location: "details",
+  details: "review",
+  review: undefined,
+};
 
 function StepIndicator({ current, onJump }: { current: number; onJump: (id: StepId) => void }) {
   return (
@@ -831,26 +884,57 @@ function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?
               <h1 className="mt-3 text-3xl md:text-4xl">Send this to us on WhatsApp</h1>
               <p
                 role="alert"
-                className="mt-5 rounded-md border border-border bg-secondary px-4 py-3 text-sm"
+                className="mt-5 rounded-lg border border-status-monitor/50 bg-status-monitor-wash px-4 py-3 text-sm"
               >
                 {warning}
               </p>
             </>
           ) : (
             <>
-              <p className="eyebrow">Request sent</p>
-              <h1 className="mt-3 text-3xl md:text-4xl">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex size-10 items-center justify-center rounded-full bg-status-good-wash text-status-good">
+                  <Check className="size-5" aria-hidden="true" />
+                </span>
+                <p className="eyebrow">Request sent</p>
+              </div>
+              <h1 className="mt-4 text-3xl md:text-4xl">
                 Thanks{snapshot.name ? `, ${snapshot.name.split(" ")[0]}` : ""} — we've got it.
               </h1>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                {snapshot.registration && (
+                  <RegPlate registration={snapshot.registration} size="md" />
+                )}
+                <span className="rounded-md border border-border bg-secondary px-3 py-2 font-mono text-sm font-semibold">
+                  {snapshot.reference}
+                </span>
+              </div>
               <p className="mt-5 text-lg text-muted-foreground">
-                Your reference is{" "}
-                <strong className="font-mono text-foreground">{snapshot.reference}</strong>. We'll
-                confirm the price for your exact car and let you know what we've got available.
+                Quote that reference if you ring. We'll confirm the price for your exact car and let
+                you know what we've got available — usually the same working day.
               </p>
             </>
           )}
 
-          <div className="mt-8 rounded-lg border border-border bg-card p-5">
+          {/* What happens next, stated plainly. The gap between "sent" and
+              "heard back" is where people worry, so it gets answered here
+              rather than left to imagination. */}
+          <ol className="mt-8 space-y-3 border-l-2 border-border pl-5">
+            {[
+              "We check your registration and work out exactly which parts your car takes.",
+              "You get a firm price — on WhatsApp unless you'd rather we rang.",
+              "If you're happy, we agree a date. Nothing is booked until you say so.",
+            ].map((line, index) => (
+              <li key={line} className="relative text-sm text-muted-foreground">
+                <span
+                  className="absolute top-1.5 -left-[1.6rem] size-2.5 rounded-full bg-accent"
+                  aria-hidden="true"
+                />
+                <span className="font-medium text-foreground">Step {index + 1}.</span> {line}
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-8 rounded-lg border border-border bg-card p-5 shadow-card">
             <h2 className="font-display text-lg font-semibold">Want an answer faster?</h2>
             <p className="mt-2 text-muted-foreground">
               Send this straight through on WhatsApp — everything you've told us is already written

@@ -88,7 +88,7 @@ function PackageCard({ pkg, services }: { pkg: ServicePackage; services: Service
     individualTotal !== null && pkg.priceGbp !== undefined ? individualTotal - pkg.priceGbp : null;
 
   return (
-    <article className="flex flex-col rounded-lg border border-border bg-card p-6">
+    <article className="flex flex-col rounded-lg border border-border bg-card p-6 shadow-card">
       <h2 className="font-display text-2xl">{pkg.name}</h2>
       <p className="mt-2 text-muted-foreground">{pkg.shortDescription}</p>
       <p className="mt-4 leading-relaxed">{pkg.description}</p>

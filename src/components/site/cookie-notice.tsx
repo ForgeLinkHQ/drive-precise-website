@@ -40,9 +40,9 @@ export function CookieNotice() {
       aria-label="Cookie notice"
       // bottom-20 on mobile keeps it clear of the fixed bottom bar; without it
       // the dismiss button sits underneath "WhatsApp" and cannot be pressed.
-      className="fixed inset-x-0 bottom-20 z-50 mx-auto max-w-3xl px-4 lg:bottom-4"
+      className="fixed inset-x-0 bottom-[5.5rem] z-30 mx-auto max-w-3xl px-4 lg:bottom-4"
     >
-      <div className="rounded-lg border border-border bg-card p-4 shadow-lg">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-panel">
         <p className="text-sm leading-relaxed">
           We don't use advertising or tracking cookies. We store your part-built quote on your own
           device so you don't lose it, and we count visits without identifying anyone.{" "}

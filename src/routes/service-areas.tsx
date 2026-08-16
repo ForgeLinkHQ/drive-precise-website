@@ -133,7 +133,10 @@ function ServiceAreasPage() {
               <p className="mt-2 text-muted-foreground">No travel charge.</p>
               <ul className="mt-5 space-y-3">
                 {core.map((area) => (
-                  <li key={area.name} className="rounded-lg border border-border bg-card px-5 py-4">
+                  <li
+                    key={area.name}
+                    className="rounded-lg border border-border bg-card px-5 py-4 shadow-card"
+                  >
                     <p className="font-medium">{area.name}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {area.outwardCodes.join(", ")}
@@ -152,7 +155,10 @@ function ServiceAreasPage() {
               </p>
               <ul className="mt-5 space-y-3">
                 {extended.map((area) => (
-                  <li key={area.name} className="rounded-lg border border-border bg-card px-5 py-4">
+                  <li
+                    key={area.name}
+                    className="rounded-lg border border-border bg-card px-5 py-4 shadow-card"
+                  >
                     <p className="font-medium">{area.name}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {area.outwardCodes.join(", ")}

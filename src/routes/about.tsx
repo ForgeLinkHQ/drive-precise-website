@@ -93,7 +93,10 @@ function AboutPage() {
                 </h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {BACKGROUND.map((item) => (
-                    <div key={item.title} className="rounded-lg border border-border bg-card p-5">
+                    <div
+                      key={item.title}
+                      className="rounded-lg border border-border bg-card p-5 shadow-card"
+                    >
                       <h3 className="font-display text-lg font-semibold">{item.title}</h3>
                       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                         {item.body}
@@ -142,7 +145,7 @@ function AboutPage() {
             </div>
 
             <aside className="lg:sticky lg:top-24 lg:self-start">
-              <div className="rounded-lg border border-border bg-card p-6">
+              <div className="rounded-lg border border-border bg-card p-6 shadow-card">
                 <h2 className="font-display text-xl font-semibold">Talk to the person</h2>
                 <p className="mt-3 text-muted-foreground">
                   Not a call centre and not a chatbot. Ask whatever you like — including whether

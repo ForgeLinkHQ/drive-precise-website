@@ -85,7 +85,7 @@ function HowItWorksPage() {
         <div className="shell py-10 lg:py-14">
           <ol className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {STEPS.map((step) => (
-              <li key={step.n} className="rounded-lg border border-border bg-card p-6">
+              <li key={step.n} className="rounded-lg border border-border bg-card p-6 shadow-card">
                 <p className="font-display text-3xl font-bold text-accent/30">{step.n}</p>
                 <h2 className="mt-3 font-display text-xl font-semibold">{step.title}</h2>
                 <p className="mt-2 leading-relaxed text-muted-foreground">{step.body}</p>
