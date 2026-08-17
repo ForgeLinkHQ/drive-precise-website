@@ -150,7 +150,7 @@ export const CATEGORY_BLURB: Record<ServiceCategory, string> = {
   servicing: "Oil, filters, fluids and the routine work that keeps a BMW where it should be.",
   "brakes-suspension": "Braking and suspension work, quoted for your exact car.",
   repairs: "Leaks, gaskets, belts, cooling and drivetrain work.",
-  checks: "Find out where the car actually stands — before you spend anything.",
+  checks: "Find out where the car actually stands before you spend anything.",
   modifications: "Styling and performance parts fitted, or taken back to factory standard.",
   mobile: "At your home or workplace, collected and returned, or workshop-supported.",
   diagnostics: "Fault-code and electrical diagnosis.",
@@ -236,7 +236,7 @@ export const SERVICES: Service[] = [
     category: "servicing",
     shortDescription: "Everything in a minor service, plus the filters your car is due.",
     description:
-      "A fuller service built around what your specific engine and mileage actually call for. Includes the minor service work, plus the air, cabin and — where fitted and due — fuel filters, and spark plugs where the interval has come round.",
+      "A fuller service built around what your specific engine and mileage actually call for. Includes the minor service work, plus the air and cabin filters, the fuel filter where one is fitted and due, and spark plugs where the interval has come round.",
     includes: [
       "Everything in the Minor Service",
       "Engine air filter replaced",
@@ -319,7 +319,7 @@ export const SERVICES: Service[] = [
     category: "servicing",
     shortDescription: "The filter the inside of the car breathes through.",
     description:
-      "Replacement of the cabin filter — sometimes called the pollen or microfilter. This is the one that affects what the inside of the car smells like, and how well the heater and air conditioning shift air.",
+      "Replacement of the cabin filter, sometimes called the pollen or microfilter. This is the one that affects what the inside of the car smells like, and how well the heater and air conditioning shift air.",
     pricing: "from",
     priceGbp: 49,
     priceConfirmed: false,
@@ -337,7 +337,7 @@ export const SERVICES: Service[] = [
     id: "fuel-filter",
     name: "Fuel Filter",
     category: "servicing",
-    shortDescription: "Diesel models mainly — depends on your engine.",
+    shortDescription: "Diesel models mainly. It depends on your engine.",
     description:
       "Fuel filter replacement where your engine has a serviceable one. Location and interval vary a great deal between models, so this is quoted once we know the car.",
     pricing: "quote",
@@ -348,13 +348,13 @@ export const SERVICES: Service[] = [
     requiresPartsQuote: true,
     customerType: "both",
     active: true,
-    internal: { notes: "Access varies wildly — some are a 20 minute job, some need the car up." },
+    internal: { notes: "Access varies wildly. Some are a 20 minute job, some need the car up." },
   },
   {
     id: "spark-plugs",
     name: "Spark Plugs",
     category: "servicing",
-    shortDescription: "Petrol models — replaced to the correct heat range.",
+    shortDescription: "Petrol models, replaced to the correct heat range.",
     description:
       "Spark plug replacement using the correct plugs for your engine. Interval and plug count vary by model, so the price is confirmed once we know which engine you have.",
     pricing: "from",
@@ -437,7 +437,7 @@ export const SERVICES: Service[] = [
     category: "servicing",
     shortDescription: "Supplied and fitted at your home or workplace.",
     description:
-      "A correctly specified battery supplied and fitted. BMWs are fussy about battery type — AGM and EFB are not interchangeable on many models — so we confirm the right one for your car before quoting.",
+      "A correctly specified battery supplied and fitted. BMWs are fussy about battery type, and AGM and EFB are not interchangeable on many models, so we confirm the right one for your car before quoting.",
     pricing: "from",
     priceGbp: 179,
     priceConfirmed: false,
@@ -454,7 +454,7 @@ export const SERVICES: Service[] = [
       partsCostGbp: 110,
       labourAllocationMinutes: 30,
       notes:
-        "Registration/adaptation is a separate, currently inactive service — see battery-registration.",
+        "Registration/adaptation is a separate, currently inactive service. See battery-registration.",
     },
   },
   {
@@ -566,7 +566,7 @@ export const SERVICES: Service[] = [
     category: "servicing",
     shortDescription: "For when the vents have started to smell.",
     description:
-      "An antibacterial treatment through the cabin ventilation system, which is where that damp, musty smell almost always comes from. This is a hygiene treatment for the ventilation system — it is not an air-conditioning regas, and it will not fix a system that has lost its refrigerant.",
+      "An antibacterial treatment through the cabin ventilation system, which is where that damp, musty smell almost always comes from. This is a hygiene treatment for the ventilation system. It is not an air-conditioning regas, and it will not fix a system that has lost its refrigerant.",
     includes: [
       "Antibacterial treatment through the ventilation system",
       "Cabin filter housing inspected",
@@ -617,7 +617,7 @@ export const SERVICES: Service[] = [
     category: "servicing",
     shortDescription: "Available where it suits the vehicle.",
     description:
-      "A flush through the oil system before an oil change. Only offered where it suits the vehicle and its history — on some engines it is the wrong thing to do, and we will say so rather than sell it to you.",
+      "A flush through the oil system before an oil change. Only offered where it suits the vehicle and its history. On some engines it is the wrong thing to do, and we will say so rather than sell it to you.",
     pricing: "fixed",
     priceGbp: 35,
     priceConfirmed: false,
@@ -704,7 +704,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "A full look over the car, with everything written down.",
     description:
-      "A structured inspection of the mechanical condition of your car. You get a written report marking every item green, amber or red — good, worth keeping an eye on, or worth doing something about — with the measurements behind each one. Nothing is marked urgent unless we can show you why.",
+      "A structured inspection of the mechanical condition of your car. You get a written report marking every item green (good), amber (worth keeping an eye on) or red (worth doing something about), with the measurements behind each one. Nothing is marked urgent unless we can show you why.",
     includes: [
       "Brakes, tyres and suspension inspected",
       "Fluid levels and condition",
@@ -733,7 +733,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "Tread, pressures, wear pattern and damage.",
     description:
-      "Every tyre inspected properly: tread depth across the width, pressures, sidewall condition, cracking, bulges and any uneven wear — which is usually the first sign something else needs looking at. TPMS status checked where your car supports it.",
+      "Every tyre inspected properly: tread depth across the width, pressures, sidewall condition, cracking, bulges and any uneven wear, which is usually the first sign something else needs looking at. TPMS status checked where your car supports it.",
     includes: [
       "Tread depth measured across each tyre",
       "Pressures checked and set",
@@ -760,7 +760,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "Hit something hard and the car doesn't feel right since.",
     description:
-      "A focused inspection after a pothole or kerb strike. We check the tyre and wheel for damage, then work through the steering and suspension components that take the load — because the damage is often not where the noise is coming from. Road test where appropriate.",
+      "A focused inspection after a pothole or kerb strike. We check the tyre and wheel for damage, then work through the steering and suspension components that take the load, because the damage is often not where the noise is coming from. Road test where appropriate.",
     includes: [
       "Tyre and wheel inspected for damage",
       "Drop links, control arms and track rods checked",
@@ -818,7 +818,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "How much braking you have left, in millimetres.",
     description:
-      "Pad thickness measured, discs assessed for wear and lipping, and the brake fluid's service history reviewed. You get numbers, not opinions — so you can decide whether this is a now job or a next-service job.",
+      "Pad thickness measured, discs assessed for wear and lipping, and the brake fluid's service history reviewed. You get numbers, not opinions, so you can decide whether this is a now job or a next-service job.",
     includes: [
       "Pad thickness measured at each corner",
       "Disc condition and wear assessed",
@@ -873,7 +873,7 @@ export const SERVICES: Service[] = [
     id: "summer-health-check",
     name: "Summer Health Check",
     category: "checks",
-    shortDescription: "Before the weather — and the traffic — gets hot.",
+    shortDescription: "Before the weather and the traffic get hot.",
     description:
       "A seasonal check focused on heat: tyres, coolant and cooling system condition, fluid levels, battery, brakes and wipers, plus a look at the cabin ventilation if the air conditioning has started to smell.",
     includes: [
@@ -905,7 +905,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "Before you load the family in and drive to France.",
     description:
-      "A pre-journey inspection built around long drives with a full car. Tyres including the spare, fluids, brakes, cooling, lights, wipers and a road test — so that simple problems get found here rather than on a motorway two hundred miles from home.",
+      "A pre-journey inspection built around long drives with a full car. Tyres including the spare, fluids, brakes, cooling, lights, wipers and a road test, so that simple problems get found here rather than on a motorway two hundred miles from home.",
     includes: [
       "All tyres including spare",
       "Fluid levels and condition",
@@ -966,7 +966,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "Find the fails before the tester does.",
     description:
-      "We check the areas that commonly fail an MOT — lights, tyres, brakes, suspension, wipers, washers, visible structural condition — so you can get anything obvious sorted before the test. Drive Precise is not an MOT testing station; we can arrange the test itself through a partner.",
+      "We check the areas that commonly fail an MOT: lights, tyres, brakes, suspension, wipers, washers and visible structural condition. That way you can get anything obvious sorted before the test. Drive Precise is not an MOT testing station; we can arrange the test itself through a partner.",
     includes: [
       "Lights and indicators",
       "Tyres and tread depth",
@@ -1015,7 +1015,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "Before you hand over the money.",
     description:
-      "An independent inspection of a car you are thinking of buying. We look at it properly — mechanical condition, tyres, brakes, suspension, visible leaks, overall condition — and road test it where the seller permits. You get a written report and a straight answer about whether to walk away.",
+      "An independent inspection of a car you are thinking of buying. We look at it properly, covering mechanical condition, tyres, brakes, suspension, visible leaks and overall condition, and road test it where the seller permits. You get a written report and a straight answer about whether to walk away.",
     includes: [
       "Static inspection inside and out",
       "Mechanical assessment",
@@ -1048,7 +1048,7 @@ export const SERVICES: Service[] = [
     category: "checks",
     shortDescription: "You've bought it. Now find out where it really stands.",
     description:
-      "An independent baseline assessment of a BMW you have just bought. What needs doing now, what can wait, and what is completely fine — so you can plan rather than guess, and so you have a starting point for its service history with us.",
+      "An independent baseline assessment of a BMW you have just bought. What needs doing now, what can wait, and what is completely fine, so you can plan rather than guess and have a starting point for its service history with us.",
     includes: [
       "Full vehicle health check",
       "Service history reviewed against what the car actually needs",
@@ -1077,7 +1077,7 @@ export const SERVICES: Service[] = [
     category: "brakes-suspension",
     shortDescription: "Pads replaced, discs assessed while we're in there.",
     description:
-      "Front brake pads replaced. We assess the discs at the same time and tell you honestly whether they need doing — if they are fine, you keep your money.",
+      "Front brake pads replaced. We assess the discs at the same time and tell you honestly whether they need doing. If they are fine, you keep your money.",
     pricing: "from",
     priceGbp: 169,
     priceSuffix: "fitted",
@@ -1141,7 +1141,7 @@ export const SERVICES: Service[] = [
       partsCostGbp: 50,
       labourAllocationMinutes: 75,
       travelMinutes: 30,
-      notes: "EPB retraction needs the tool — confirm model coverage before accepting mobile.",
+      notes: "EPB retraction needs the tool. Confirm model coverage before accepting mobile.",
     },
   },
   {
@@ -1210,7 +1210,7 @@ export const SERVICES: Service[] = [
     category: "brakes-suspension",
     shortDescription: "Wandering steering, uneven tyre wear, clunks.",
     description:
-      "Front control arms and wishbones replaced. Which arms your car needs, and how many, depends on the model and on what the inspection finds — so this is quoted rather than priced from a list. Alignment is recommended afterwards and we can arrange it.",
+      "Front control arms and wishbones replaced. Which arms your car needs, and how many, depends on the model and on what the inspection finds, so this is quoted rather than priced from a list. Alignment is recommended afterwards and we can arrange it.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "conditional",
@@ -1228,7 +1228,7 @@ export const SERVICES: Service[] = [
     category: "brakes-suspension",
     shortDescription: "Play in the steering, uneven front tyre wear.",
     description:
-      "Track rod ends replaced. Alignment is required afterwards — we will arrange it through a partner as part of the job.",
+      "Track rod ends replaced. Alignment is required afterwards, and we will arrange it through a partner as part of the job.",
     pricing: "from",
     priceGbp: 139,
     priceSuffix: "fitted",
@@ -1249,7 +1249,7 @@ export const SERVICES: Service[] = [
     category: "brakes-suspension",
     shortDescription: "Floaty ride, knocking over bumps, uneven wear.",
     description:
-      "Dampers and top mounts replaced. Quoted for your car because the parts vary between standard, M Sport and adaptive setups — and adaptive dampers are a very different price.",
+      "Dampers and top mounts replaced. Quoted for your car because the parts vary between standard, M Sport and adaptive setups, and adaptive dampers are a very different price.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "no",
@@ -1285,7 +1285,7 @@ export const SERVICES: Service[] = [
     alsoIn: ["modifications"],
     shortDescription: "Fitted properly, with alignment arranged after.",
     description:
-      "Lowering springs supplied or customer-supplied and fitted. Alignment afterwards is not optional and we will arrange it — dropping a car and leaving the geometry alone is how you destroy a set of tyres in three thousand miles.",
+      "Lowering springs supplied or customer-supplied and fitted. Alignment afterwards is not optional and we will arrange it. Dropping a car and leaving the geometry alone is how you destroy a set of tyres in three thousand miles.",
     pricing: "from",
     priceGbp: 389,
     priceSuffix: "fitted",
@@ -1307,7 +1307,7 @@ export const SERVICES: Service[] = [
     category: "brakes-suspension",
     shortDescription: "Whatever the inspection turns up.",
     description:
-      "Suspension work identified by an inspection — bushes, subframe mounts, anti-roll bar components and the rest. Quoted once we know what the car actually needs.",
+      "Suspension work identified by an inspection: bushes, subframe mounts, anti-roll bar components and the rest. Quoted once we know what the car actually needs.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "conditional",
@@ -1342,7 +1342,7 @@ export const SERVICES: Service[] = [
     category: "repairs",
     shortDescription: "The classic BMW oil leak.",
     description:
-      "Rocker cover gasket replacement — the most common oil leak on a great many BMW engines, and usually the reason for that hot-oil smell after a run.",
+      "Rocker cover gasket replacement. This is the most common oil leak on a great many BMW engines, and usually the reason for that hot-oil smell after a run.",
     pricing: "from",
     priceGbp: 389,
     priceConfirmed: false,
@@ -1412,7 +1412,7 @@ export const SERVICES: Service[] = [
     category: "repairs",
     shortDescription: "Boost leaks, breather pipes, intake gaskets.",
     description:
-      "Intake and crankcase breather work — split pipes, perished hoses, failed valves and intake gaskets.",
+      "Intake and crankcase breather work: split pipes, perished hoses, failed valves and intake gaskets.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "conditional",
@@ -1477,7 +1477,7 @@ export const SERVICES: Service[] = [
     category: "repairs",
     shortDescription: "Something else. Tell us what it's doing.",
     description:
-      "Mechanical repair work outside the jobs listed here. Describe what the car is doing in your own words — you do not need to know what the part is called — and we will tell you what is likely involved.",
+      "Mechanical repair work outside the jobs listed here. Describe what the car is doing in your own words. You do not need to know what the part is called, and we will tell you what is likely involved.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "conditional",
@@ -1496,7 +1496,7 @@ export const SERVICES: Service[] = [
     modStream: "fit",
     shortDescription: "Fitted straight, fitted properly.",
     description:
-      "Front splitter fitted and aligned. Customer-supplied parts welcome — most of this work is people who have already bought the part.",
+      "Front splitter fitted and aligned. Customer-supplied parts welcome. Most of this work is for people who have already bought the part.",
     pricing: "from",
     priceGbp: 99,
     priceConfirmed: false,
@@ -1613,7 +1613,7 @@ export const SERVICES: Service[] = [
     modStream: "fit",
     shortDescription: "The whole kit, fitted in one go.",
     description:
-      "A complete styling kit fitted in a single visit — splitter, skirts, diffuser, spoiler and caps. Quoted as one job, which is cheaper than the parts individually.",
+      "A complete styling kit fitted in a single visit: splitter, skirts, diffuser, spoiler and caps. Quoted as one job, which is cheaper than the parts individually.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "conditional",
@@ -1651,7 +1651,7 @@ export const SERVICES: Service[] = [
     modStream: "fit",
     shortDescription: "More involved intake conversions.",
     description:
-      "Intake conversions that go beyond a drop-in kit — charge pipes, inlets and associated pipework. Quoted per car.",
+      "Intake conversions that go beyond a drop-in kit, including charge pipes, inlets and associated pipework. Quoted per car.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "conditional",
@@ -1668,7 +1668,7 @@ export const SERVICES: Service[] = [
     modStream: "fit",
     shortDescription: "Fitted on a ramp, sealed and checked.",
     description:
-      "Downpipe or sports cat fitted. Ramp work. Please note this is a modification to the emissions system — it is your responsibility to ensure the vehicle remains legal for the use you put it to, and we will discuss that with you before booking.",
+      "Downpipe or sports cat fitted. Ramp work. Please note this is a modification to the emissions system. It is your responsibility to ensure the vehicle remains legal for the use you put it to, and we will discuss that with you before booking.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "no",
@@ -1687,7 +1687,7 @@ export const SERVICES: Service[] = [
     name: "Wheel Set Swap",
     category: "modifications",
     modStream: "fit",
-    shortDescription: "Winter set on, summer set off — or the other way round.",
+    shortDescription: "Winter set on, summer set off, or the other way round.",
     description:
       "A full wheel set swapped over, torqued to spec and pressures set. Popular twice a year with anyone running a second set.",
     pricing: "from",
@@ -1919,7 +1919,7 @@ export const SERVICES: Service[] = [
     category: "mobile",
     shortDescription: "Several cars in one visit.",
     description:
-      "Mechanical preparation across a batch of stock in a single visit — servicing, brakes, de-modification and whatever else the cars need before they go out.",
+      "Mechanical preparation across a batch of stock in a single visit: servicing, brakes, de-modification and whatever else the cars need before they go out.",
     pricing: "quote",
     priceConfirmed: false,
     mobile: "yes",
@@ -1967,7 +1967,7 @@ export const SERVICES: Service[] = [
     customerType: "both",
     active: false,
     inactiveReason:
-      "§46 — Drive Precise does not yet own diagnostic equipment. Do not activate, and do not advertise as coming soon. When equipment arrives, verify what it actually supports on each model before switching this on.",
+      "§46. Drive Precise does not yet own diagnostic equipment. Do not activate, and do not advertise as coming soon. When equipment arrives, verify what it actually supports on each model before switching this on.",
   },
   {
     id: "electrical-diagnostics",
@@ -1983,7 +1983,7 @@ export const SERVICES: Service[] = [
     requiresPartsQuote: false,
     customerType: "both",
     active: false,
-    inactiveReason: "§46 — no diagnostic equipment yet.",
+    inactiveReason: "§46. No diagnostic equipment yet.",
   },
 ];
 
@@ -2077,7 +2077,7 @@ export function formatDuration(minutes: number): string {
 export const MOBILE_LABEL: Record<MobileSuitability, string> = {
   yes: "Available at your home or workplace",
   conditional: "Mobile where the car and location allow",
-  no: "Needs a ramp — collection available",
+  no: "Needs a ramp, collection available",
 };
 
 /**

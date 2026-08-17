@@ -43,7 +43,7 @@ export function ResumeQuote() {
           <p className="text-sm">
             <span className="font-medium">Your request is still here</span>
             <span className="text-muted-foreground">
-              {" — "}
+              {": "}
               {first}
               {others > 0 && ` and ${others} other item${others === 1 ? "" : "s"}`}
               {totals.pricedCount > 0 && `, from ${formatGbp(totals.indicativeTotalGbp)}`}

@@ -13,7 +13,7 @@ import { FROM_PRICE_CAVEAT, retailServices } from "@/lib/services";
 export const Route = createFileRoute("/modifications")({
   head: () =>
     pageMeta({
-      title: "BMW Modifications Fitted — Styling, Intakes, Lowering Springs | Drive Precise",
+      title: "BMW Modifications Fitted: Styling, Intakes, Lowering Springs | Drive Precise",
       description:
         "Splitters, diffusers, skirts, spoilers, induction kits, lowering springs and wheel swaps fitted properly. Customer-supplied parts welcome.",
       path: "/modifications",
@@ -39,7 +39,7 @@ function ModificationsPage() {
           tone="deep"
           eyebrow="Modifications"
           title="Fitted properly, first time"
-          intro="Bought the parts and would rather someone who does this every week put them on? Most of it happens at your house. Customer-supplied parts are welcome — a lot of this work is exactly that."
+          intro="Bought the parts and would rather someone who does this every week put them on? Most of it happens at your house. Customer-supplied parts are welcome, and a lot of this work is exactly that."
         />
 
         <div className="shell py-10 lg:py-14">
@@ -56,7 +56,7 @@ function ModificationsPage() {
               <h2 className="font-display text-xl font-semibold">A word on legality</h2>
               <p className="mt-3 text-muted-foreground">
                 Some modifications affect emissions equipment or the way a car behaves on the road.
-                Where that's the case we'll talk it through with you before booking — what it means
+                Where that's the case we'll talk it through with you before booking: what it means
                 for your MOT, your insurance and how you intend to use the car. We'd rather have
                 that conversation up front than after the invoice.
               </p>
@@ -66,7 +66,7 @@ function ModificationsPage() {
               <h2 className="font-display text-xl font-semibold">Changed your mind?</h2>
               <p className="mt-3 text-muted-foreground">
                 Selling the car, handing back a lease, or just want it standard again? Putting
-                things back is a big part of what we do — and we're good at it, which is not
+                things back is a big part of what we do, and we're good at it, which is not
                 something every garage can say.
               </p>
               <Button asChild variant="outline" className="mt-5">

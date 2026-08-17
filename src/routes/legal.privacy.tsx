@@ -8,7 +8,7 @@ import { mailtoHref } from "@/lib/contact-links";
 export const Route = createFileRoute("/legal/privacy")({
   head: () =>
     pageMeta({
-      title: "Privacy Policy — Drive Precise",
+      title: "Privacy Policy | Drive Precise",
       description:
         "What we collect, why we collect it, how long we keep it and what you can ask us to do with it.",
       path: "/legal/privacy",
@@ -35,7 +35,7 @@ function PrivacyPage() {
 
       <h2>What we collect when you request a quote</h2>
       <ul>
-        <li>Your name, mobile number and — if you give it — your email address.</li>
+        <li>Your name, mobile number and, if you give it, your email address.</li>
         <li>Your vehicle registration and mileage.</li>
         <li>What work you've asked about, and any notes you've written.</li>
         <li>Your postcode and preferred appointment timing.</li>

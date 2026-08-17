@@ -10,7 +10,7 @@ import { pageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/how-it-works")({
   head: () =>
     pageMeta({
-      title: "How It Works — Mobile BMW Servicing | Drive Precise",
+      title: "How It Works: Mobile BMW Servicing | Drive Precise",
       description:
         "From quote to invoice: how a Drive Precise job actually runs. Build a request, get a vehicle-specific price on WhatsApp, we come to you, you get written findings and a proper invoice.",
       path: "/how-it-works",
@@ -23,7 +23,7 @@ const STEPS = [
   {
     n: "01",
     title: "Tell us about the car",
-    body: "Registration and rough mileage. That's enough for us to work out what parts your car takes — which is what makes a price accurate rather than a guess.",
+    body: "Registration and rough mileage. That's enough for us to work out what parts your car takes, which is what makes a price accurate rather than a guess.",
   },
   {
     n: "02",
@@ -33,12 +33,12 @@ const STEPS = [
   {
     n: "03",
     title: "We confirm the real price",
-    body: 'Usually on WhatsApp, usually the same day. This is where a "from" price becomes a firm one — for your car, with the parts it actually needs. Nothing is booked until you\'re happy with it.',
+    body: 'Usually on WhatsApp, usually the same day. This is where a "from" price becomes a firm one, for your car, with the parts it actually needs. Nothing is booked until you\'re happy with it.',
   },
   {
     n: "04",
     title: "We come to you",
-    body: "Home, work, wherever the car sits — as long as it's safe and suitable for the job. If it needs a ramp, we'll have told you at step three and arranged collection.",
+    body: "Home, work, wherever the car sits, as long as it's safe and suitable for the job. If it needs a ramp, we'll have told you at step three and arranged collection.",
   },
   {
     n: "05",

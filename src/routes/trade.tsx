@@ -16,7 +16,7 @@ import { mailtoHref } from "@/lib/contact-links";
 export const Route = createFileRoute("/trade")({
   head: () =>
     pageMeta({
-      title: "Trade Vehicle Preparation — BMW Specialist | Drive Precise",
+      title: "Trade Vehicle Preparation: BMW Specialist | Drive Precise",
       description:
         "Mechanical preparation, part-exchange checks, PDI, de-modification and batch stock work for motor traders and dealerships. On your site, or collected.",
       path: "/trade",
@@ -33,7 +33,7 @@ const CAPABILITIES = [
   "Mechanical repairs",
   "De-modification and styling removal",
   "Vehicle collection and movement between sites",
-  "Batch preparation — several cars in one visit",
+  "Batch preparation, several cars in one visit",
   "Partner coordination for tyres, alignment, MOT and bodywork",
 ];
 
@@ -69,7 +69,7 @@ function TradePage() {
           tone="deep"
           eyebrow="Trade"
           title="Vehicle preparation without additional workshop overhead"
-          intro="Mechanical preparation, checks and de-modification for motor traders, dealerships and sales sites — at your site or collected. One technician, one point of contact, work that comes back right the first time."
+          intro="Mechanical preparation, checks and de-modification for motor traders, dealerships and sales sites, at your site or collected. One technician, one point of contact, work that comes back right the first time."
         />
 
         <div className="shell py-10 lg:py-14">
@@ -106,6 +106,13 @@ function TradePage() {
                   work. They aren't published here, and the retail prices elsewhere on this site
                   aren't what you'd pay. Tell us what your stock looks like and we'll put a real
                   proposal together.
+                </p>
+                {/* Trade buyers read every quote as ex-VAT unless told
+                    otherwise. Saying it here stops a rate being compared
+                    against a VAT-registered competitor on the wrong basis. */}
+                <p className="mt-3 text-muted-foreground">
+                  {BUSINESS.legalName} is not VAT registered, so nothing we quote has VAT added to
+                  it. The rate we agree is the rate you're invoiced.
                 </p>
               </div>
             </div>
@@ -194,7 +201,7 @@ function TradeForm() {
   if (reference) {
     return (
       <div className="rounded-lg border border-border bg-card p-6 shadow-card">
-        <h2 className="font-display text-2xl">Thanks — that's with us</h2>
+        <h2 className="font-display text-2xl">Thanks, that's with us</h2>
         <p className="mt-3 text-muted-foreground">
           Your reference is <strong className="font-mono text-foreground">{reference}</strong>.
           We'll come back to you to talk through volumes and what a working arrangement would look
@@ -385,7 +392,7 @@ function TradeForm() {
           </div>
         </fieldset>
 
-        <Field label="Typical stock" hint="Makes, ages, price bracket — whatever's useful.">
+        <Field label="Typical stock" hint="Makes, ages, price bracket, whatever's useful.">
           {(props) => (
             <Input
               {...props}

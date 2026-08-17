@@ -20,7 +20,7 @@ import {
 export const Route = createFileRoute("/services/")({
   head: () =>
     pageMeta({
-      title: "BMW Services & Prices — Drive Precise",
+      title: "BMW Services & Prices | Drive Precise",
       description:
         "Every job we do, with indicative prices: servicing, brakes, suspension, mechanical repairs, checks and inspections, modifications and collection services.",
       path: "/services",
@@ -38,7 +38,7 @@ function ServicesIndex() {
         <PageHeader
           eyebrow="Services"
           title="Everything we do, with prices"
-          intro="Six areas of work. Add anything straight to your quote — nothing is booked until we've confirmed the price for your car."
+          intro="Six areas of work. Add anything straight to your quote. Nothing is booked until we've confirmed the price for your car."
         />
 
         <div className="shell py-10 lg:py-14">

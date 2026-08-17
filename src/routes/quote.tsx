@@ -80,7 +80,7 @@ export const Route = createFileRoute("/quote")({
   }),
   head: () =>
     pageMeta({
-      title: "Get a quote — Drive Precise",
+      title: "Get a quote | Drive Precise",
       description:
         "Tell us your registration, choose what you'd like doing, and we'll confirm the price for your exact BMW. Takes about two minutes.",
       path: "/quote",
@@ -403,7 +403,7 @@ function VehicleStep({ errors, onNext }: { errors: Record<string, string>; onNex
         }
       />
 
-      <Field label="Mileage" hint="Roughly is fine — it helps us tell you what's due.">
+      <Field label="Mileage" hint="Roughly is fine. It helps us tell you what's due.">
         {(props) => (
           <Input
             {...props}
@@ -417,7 +417,7 @@ function VehicleStep({ errors, onNext }: { errors: Record<string, string>; onNex
 
       <Field
         label="Anything you'd like to mention about the car?"
-        hint="Noises, warning lights, when you last had it serviced — whatever seems relevant."
+        hint="Noises, warning lights, when you last had it serviced, whatever seems relevant."
       >
         {(props) => (
           <Textarea
@@ -596,20 +596,20 @@ function LocationStep({ onBack, onNext }: { onBack: () => void; onNext: () => vo
               "border-border bg-secondary",
           )}
         >
-          {coverage.status === "core" && `Yes — ${coverage.area.name} is well within our area.`}
+          {coverage.status === "core" && `Yes, ${coverage.area.name} is well within our area.`}
           {coverage.status === "extended" &&
-            `We do cover ${coverage.area.name}. There may be a travel charge depending on the job — we'll tell you before you commit to anything.`}
+            `We do cover ${coverage.area.name}. There may be a travel charge depending on the job, and we'll tell you before you commit to anything.`}
           {coverage.status === "outside" &&
-            "That's outside the areas we normally cover, but send the request anyway — depending on the work it may still be worth a trip, and we'll tell you honestly either way."}
+            "That's outside the areas we normally cover, but send the request anyway. Depending on the work it may still be worth a trip, and we'll tell you honestly either way."}
           {coverage.status === "unrecognised" &&
-            "We couldn't read that as a postcode. Carry on anyway — we'll sort it out when we speak."}
+            "We couldn't read that as a postcode. Carry on anyway and we'll sort it out when we speak."}
         </p>
       )}
 
       <div className="border-t border-border pt-6">
         <h2 className="font-display text-2xl">When suits you?</h2>
         <p className="mt-2 text-muted-foreground">
-          This is a preference, not a booking — we'll confirm what's actually available when we come
+          This is a preference, not a booking. We'll confirm what's actually available when we come
           back to you with your price.
         </p>
       </div>
@@ -680,7 +680,7 @@ function DetailsStep({
       <div>
         <h2 className="font-display text-2xl">How do we get back to you?</h2>
         <p className="mt-2 text-muted-foreground">
-          A mobile number is all we really need — most of this happens on WhatsApp.
+          A mobile number is all we really need, because most of this happens on WhatsApp.
         </p>
       </div>
 
@@ -711,7 +711,7 @@ function DetailsStep({
 
       <Field
         label="Email"
-        hint="Optional — handy for sending you the written quote."
+        hint="Optional, but handy for sending you the written quote."
         error={errors.email}
       >
         {(props) => (
@@ -898,7 +898,7 @@ function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?
                 <p className="eyebrow">Request sent</p>
               </div>
               <h1 className="mt-4 text-3xl md:text-4xl">
-                Thanks{snapshot.name ? `, ${snapshot.name.split(" ")[0]}` : ""} — we've got it.
+                Thanks{snapshot.name ? `, ${snapshot.name.split(" ")[0]}` : ""}, we've got it.
               </h1>
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 {snapshot.registration && (
@@ -910,7 +910,7 @@ function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?
               </div>
               <p className="mt-5 text-lg text-muted-foreground">
                 Quote that reference if you ring. We'll confirm the price for your exact car and let
-                you know what we've got available — usually the same working day.
+                you know what we've got available, usually the same working day.
               </p>
             </>
           )}
@@ -921,7 +921,7 @@ function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?
           <ol className="mt-8 space-y-3 border-l-2 border-border pl-5">
             {[
               "We check your registration and work out exactly which parts your car takes.",
-              "You get a firm price — on WhatsApp unless you'd rather we rang.",
+              "You get a firm price, on WhatsApp unless you'd rather we rang.",
               "If you're happy, we agree a date. Nothing is booked until you say so.",
             ].map((line, index) => (
               <li key={line} className="relative text-sm text-muted-foreground">
@@ -937,7 +937,7 @@ function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?
           <div className="mt-8 rounded-lg border border-border bg-card p-5 shadow-card">
             <h2 className="font-display text-lg font-semibold">Want an answer faster?</h2>
             <p className="mt-2 text-muted-foreground">
-              Send this straight through on WhatsApp — everything you've told us is already written
+              Send this straight through on WhatsApp. Everything you've told us is already written
               out. You only need to press send.
             </p>
             <div className="mt-4">

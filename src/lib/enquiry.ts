@@ -276,7 +276,7 @@ export async function submitEnquiry(snapshot: EnquirySnapshot): Promise<SubmitRe
         ok: false,
         snapshot,
         message:
-          "We couldn't save your request just now. Your details are below — send them on WhatsApp and we'll pick it up from there.",
+          "We couldn't save your request just now. Your details are below. Send them on WhatsApp and we'll pick it up from there.",
       };
     }
 
@@ -286,7 +286,7 @@ export async function submitEnquiry(snapshot: EnquirySnapshot): Promise<SubmitRe
       ok: false,
       snapshot,
       message:
-        "We couldn't reach our system just now. Your details are below — send them on WhatsApp and we'll pick it up from there.",
+        "We couldn't reach our system just now. Your details are below. Send them on WhatsApp and we'll pick it up from there.",
     };
   }
 }

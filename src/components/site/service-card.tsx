@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 const DELIVERY: Record<MobileSuitability, { icon: typeof Home; label: string }> = {
   yes: { icon: Home, label: "We come to you" },
   conditional: { icon: Truck, label: "Mobile where the car allows" },
-  no: { icon: Wrench, label: "Needs a ramp — we collect" },
+  no: { icon: Wrench, label: "Needs a ramp, we collect" },
 };
 
 export function ServiceCard({

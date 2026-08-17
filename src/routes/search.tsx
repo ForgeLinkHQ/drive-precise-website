@@ -21,7 +21,7 @@ export const Route = createFileRoute("/search")({
   }),
   head: () =>
     pageMeta({
-      title: "Search services — Drive Precise",
+      title: "Search services | Drive Precise",
       description: "Find the right service. Try 'brakes', 'knocking', 'pothole' or 'smell'.",
       path: "/search",
       // A search results page has nothing unique to offer an index, and
@@ -111,8 +111,8 @@ function SearchPage() {
 
               {results.length === 0 ? (
                 <p className="mt-3 text-muted-foreground">
-                  Search only looks through the things we list — it isn't a diagnosis tool. If the
-                  car is doing something odd, message us and describe it in your own words. That
+                  Search only looks through the things we list, and it isn't a diagnosis tool. If
+                  the car is doing something odd, message us and describe it in your own words. That
                   works better than any search box.
                 </p>
               ) : (

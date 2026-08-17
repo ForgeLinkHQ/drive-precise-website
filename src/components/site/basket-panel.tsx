@@ -63,7 +63,7 @@ export function BasketPanel({
       {items.length === 0 ? (
         <div className="px-5 py-6">
           <p className="text-sm text-muted-foreground">
-            Nothing added yet. Pick whatever you'd like doing — you can change it at any point.
+            Nothing added yet. Pick whatever you'd like doing, and you can change it at any point.
           </p>
           {onEmptyAction && <div className="mt-4">{onEmptyAction}</div>}
         </div>

@@ -7,7 +7,7 @@ import { BUSINESS } from "@/lib/business";
 export const Route = createFileRoute("/legal/terms")({
   head: () =>
     pageMeta({
-      title: "Terms & Conditions — Drive Precise",
+      title: "Terms & Conditions | Drive Precise",
       description: "The terms on which Drive Precise Ltd carries out work.",
       path: "/legal/terms",
     }),
@@ -55,7 +55,7 @@ function TermsPage() {
 
       <h2>4. Where the work happens</h2>
       <p>
-        Mobile work requires a location that is safe, legal and suitable — reasonably level ground,
+        Mobile work requires a location that is safe, legal and suitable: reasonably level ground,
         enough room to work around the vehicle, and permission from whoever controls the land. If we
         arrive and the location isn't suitable, we'll work with you to find an alternative or
         rearrange. We reserve the right to decline to work in conditions we consider unsafe.
@@ -93,7 +93,7 @@ function TermsPage() {
         An inspection reports what could reasonably be established at the time, by the methods
         described for that inspection. It is not a warranty against future faults, and it cannot
         cover what is not visible or accessible without dismantling. Pre-purchase inspections in
-        particular are a snapshot of a vehicle on one day — a useful and honest one, but a snapshot.
+        particular are a snapshot of a vehicle on one day, a useful and honest one, but a snapshot.
       </p>
 
       <h2>9. Partner services</h2>

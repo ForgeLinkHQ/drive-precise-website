@@ -209,7 +209,7 @@ async function main() {
     if (status < 200 || status >= 300) fail(route, `HTTP ${status}`);
 
     const h1Count = await page.locator("h1").count();
-    if (h1Count === 0) fail(route, "no <h1> — the route rendered a shell but no content");
+    if (h1Count === 0) fail(route, "no <h1>: the route rendered a shell but no content");
     if (h1Count > 1) notes.push(`${route}: ${h1Count} <h1> elements`);
 
     const title = await page.title();

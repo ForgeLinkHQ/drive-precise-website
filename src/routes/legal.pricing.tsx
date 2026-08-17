@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { LegalPage } from "@/components/site/legal-page";
+import { BUSINESS } from "@/lib/business";
 import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/legal/pricing")({
   head: () =>
     pageMeta({
-      title: "How our pricing works — Drive Precise",
+      title: "How our pricing works | Drive Precise",
       description:
         "Fixed prices, 'from' prices and vehicle-specific quotes explained, plus how partner services are charged.",
       path: "/legal/pricing",
@@ -32,8 +33,8 @@ function PricingPage() {
       <h2>"From" prices</h2>
       <p>
         Shown as <strong>From £149</strong>. These are jobs where the labour is predictable but the
-        parts are not. BMW parts prices vary a great deal between models, engines and trim levels —
-        the same service on two cars that look identical from the outside can differ by a
+        parts are not. BMW parts prices vary a great deal between models, engines and trim levels.
+        The same service on two cars that look identical from the outside can differ by a
         substantial amount once you know which engine is in them.
       </p>
       <p>
@@ -45,7 +46,7 @@ function PricingPage() {
       <h2>Vehicle-specific quotes</h2>
       <p>
         Shown as <strong>Vehicle-specific quote</strong>. These are jobs where we cannot honestly
-        put a number on it in advance — a leak that needs finding, a repair where the parts depend
+        put a number on it in advance: a leak that needs finding, a repair where the parts depend
         entirely on what we discover, or work on braking or suspension systems that vary enormously
         across models.
       </p>
@@ -59,8 +60,19 @@ function PricingPage() {
       <p>
         The figure shown while you build a request is labelled an <em>estimate</em>, and it is
         calculated only from items that have a price. Anything marked as a vehicle-specific quote is
-        counted separately and is not included in that number — so the total never implies that a
+        counted separately and is not included in that number, so the total never implies that a
         variable repair is covered by it.
+      </p>
+
+      <h2>VAT</h2>
+      <p>
+        {BUSINESS.legalName} is not registered for VAT. No VAT is charged on any work, and no VAT is
+        added to any figure shown on this site or on the quote you're given. The price you agree is
+        the price you pay.
+      </p>
+      <p>
+        This applies to trade customers as well as retail ones. Where a quote from us sits alongside
+        quotes from VAT-registered garages, ours carries no VAT line to add on afterwards.
       </p>
 
       <h2>Additional work found during a job</h2>
@@ -74,7 +86,7 @@ function PricingPage() {
       <p>
         There is no travel charge within our core service area. Beyond it, a travel charge may apply
         depending on the distance and the size of the job. Where one applies, it is included in the
-        quote you're given before booking — never added afterwards.{" "}
+        quote you're given before booking, never added afterwards.{" "}
         <Link to="/service-areas" className="text-accent underline underline-offset-4">
           Check your postcode
         </Link>
@@ -83,7 +95,7 @@ function PricingPage() {
 
       <h2>Parts you supply yourself</h2>
       <p>
-        For a lot of work — modifications especially — you're welcome to supply your own parts, and
+        For a lot of work, modifications especially, you're welcome to supply your own parts, and
         we'll quote for labour only. The part itself is then your responsibility: if it is the wrong
         one, faulty, or fails later, that sits with you and your supplier. Our labour is our
         responsibility either way. For some jobs we'd rather supply the parts so we can stand behind
@@ -92,17 +104,17 @@ function PricingPage() {
 
       <h2>Partner services</h2>
       <p>
-        Where your car needs work we don't do ourselves — tyres, alignment, MOT testing, bodywork,
-        glass — we can arrange it through independent local specialists. That work is carried out
-        and charged by those businesses under their own terms, and we'll tell you who is doing it
-        before anything is booked.
+        Where your car needs work we don't do ourselves, such as tyres, alignment, MOT testing,
+        bodywork or glass, we can arrange it through independent local specialists. That work is
+        carried out and charged by those businesses under their own terms, and we'll tell you who is
+        doing it before anything is booked.
       </p>
 
       <h2>Payment</h2>
       <p>
         Payment is due on completion, by bank transfer or card. There is no deposit for standard
         work. Where a job requires expensive parts ordered specifically for your vehicle, we may ask
-        for those in advance — we will always tell you before you commit.
+        for those in advance, and we will always tell you before you commit.
       </p>
     </LegalPage>
   );

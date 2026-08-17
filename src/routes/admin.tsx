@@ -11,7 +11,7 @@ import { BUSINESS } from "@/lib/business";
 export const Route = createFileRoute("/admin")({
   head: () =>
     pageMeta({
-      title: "Admin — Drive Precise",
+      title: "Admin | Drive Precise",
       description: "Internal.",
       path: "/admin",
       noIndex: true,

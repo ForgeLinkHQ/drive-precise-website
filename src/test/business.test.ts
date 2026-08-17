@@ -61,23 +61,62 @@ describe("postcode coverage (§56)", () => {
 });
 
 describe("business configuration", () => {
-  it("reports the placeholders that must be replaced before launch", () => {
+  it("still reports the registered office address as outstanding", () => {
+    // The one disclosure with no honest default. When it is finally set, this
+    // test should be updated to assert there are no issues at all, which is
+    // the point at which the site is legally complete.
     const issues = configurationIssues();
-    // In this environment nothing is configured, so every check should fire.
-    // The value of this test is that the function actually detects them.
-    expect(issues.length).toBeGreaterThan(0);
-    expect(issues.join(" ")).toContain("VITE_BUSINESS_PHONE");
+    expect(issues.join(" ")).toContain("Registered office address is not set");
   });
 
-  it("uses an unallocated number as the placeholder, never an invented one", () => {
-    // Ofcom's drama ranges are permanently unassigned, so an unconfigured site
-    // cannot send anyone to a stranger's phone.
-    expect(BUSINESS.phone.replace(/\D/g, "")).toMatch(/^447700900\d{3}$/);
+  it("carries a real phone number rather than a placeholder", () => {
+    // A UK mobile in E.164: +447 followed by nine digits.
+    expect(BUSINESS.phone).toMatch(/^\+447\d{9}$/);
+    expect(BUSINESS.phone.replace(/\D/g, "")).not.toMatch(/^447700900\d{3}$/);
   });
 
-  it("still produces a valid WhatsApp number shape", () => {
+  it("shows the same number it dials", () => {
+    // The display form is what a customer reads off the page and types into a
+    // keypad; the E.164 form is what the tel: link uses. If they ever drift
+    // apart, half the people who try to call reach nobody. Normalising the
+    // leading zero to the country code is the only comparison that catches it.
+    const dialled = BUSINESS.phone.replace(/\D/g, "");
+    const displayed = BUSINESS.phoneDisplay.replace(/\D/g, "");
+    expect(displayed).toMatch(/^07\d{9}$/);
+    expect(`44${displayed.slice(1)}`).toBe(dialled);
+  });
+
+  it("sends WhatsApp to the same number as well", () => {
     expect(whatsappConfigured()).toBe(true);
     expect(BUSINESS.whatsapp).toMatch(/^\d{10,15}$/);
+    expect(BUSINESS.whatsapp).toBe(BUSINESS.phone.replace(/\D/g, ""));
+  });
+
+  it("carries the statutory company disclosures", () => {
+    expect(BUSINESS.legalName).toBe("Drive Precise Ltd");
+    expect(BUSINESS.companyNumber).toBe("15264715");
+    expect(BUSINESS.placeOfRegistration).toBe("England and Wales");
+  });
+
+  it("never advertises a VAT number while unregistered", () => {
+    // Displaying a VAT number, or charging VAT, while not registered is an
+    // offence. This is the guard that stops a stray environment variable or a
+    // copy-paste from doing it.
+    expect(BUSINESS.vatRegistered).toBe(false);
+    expect(BUSINESS.vatNumber).toBe("");
+    expect(configurationIssues().join(" ")).not.toContain("VAT number is set");
+  });
+
+  it("does not advertise an email address nobody has created", () => {
+    // Trade enquiries are the highest-value ones on the site. Pointing them at
+    // a `trade@` mailbox that does not exist loses them silently.
+    expect(BUSINESS.email).toBe("hello@driveprecise.co.uk");
+    expect(BUSINESS.tradeEmail).toBe(BUSINESS.email);
+  });
+
+  it("names the person accountable for the work", () => {
+    expect(BUSINESS.director.name).toBe("Brandon M Stephen");
+    expect(BUSINESS.director.role).toContain("Director");
   });
 
   it("states the BMW position in the descriptor without claiming affiliation", () => {

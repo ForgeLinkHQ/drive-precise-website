@@ -24,7 +24,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: `${BUSINESS.legalName} — ${BUSINESS.descriptor}` },
+      { title: `${BUSINESS.legalName} | ${BUSINESS.descriptor}` },
       {
         name: "description",
         content:
@@ -149,7 +149,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           <p className="eyebrow">Something went wrong</p>
           <h1 className="mt-4 text-3xl">This page didn't load</h1>
           <p className="mt-4 text-muted-foreground">
-            Try again, or give us a ring — we'd rather hear from you than have you fight with a
+            Try again, or give us a ring. We'd rather hear from you than have you fight with a
             website.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

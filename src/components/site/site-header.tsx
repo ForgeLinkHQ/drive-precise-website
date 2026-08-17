@@ -90,7 +90,7 @@ export function SiteHeader() {
                 className="inline-flex items-center gap-1.5 font-medium hover:text-accent"
               >
                 <Phone className="size-3.5" aria-hidden="true" />
-                {BUSINESS.phone}
+                {BUSINESS.phoneDisplay}
               </a>
             </div>
           </div>
@@ -112,7 +112,7 @@ export function SiteHeader() {
             <a
               href={telHref(BUSINESS.phone)}
               className="tap inline-flex items-center justify-center rounded-md text-foreground/70 hover:text-accent lg:hidden"
-              aria-label={`Call Drive Precise on ${BUSINESS.phone}`}
+              aria-label={`Call Drive Precise on ${BUSINESS.phoneDisplay}`}
               onClick={() => trackEvent("whatsapp_clicked", { meta: { source: "header-mobile" } })}
             >
               <Phone className="size-5" aria-hidden="true" />
@@ -247,7 +247,7 @@ export function SiteHeader() {
               className="flex min-h-11 items-center justify-center gap-2 text-sm font-medium"
             >
               <Phone className="size-4 text-accent" aria-hidden="true" />
-              {BUSINESS.phone}
+              {BUSINESS.phoneDisplay}
             </a>
           </DialogFooter>
         </DialogContent>

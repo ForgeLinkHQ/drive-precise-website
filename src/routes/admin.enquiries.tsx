@@ -164,7 +164,7 @@ function AdminEnquiries() {
                     <td className="px-4 py-3">
                       {Number(row.indicative_total_gbp) > 0
                         ? `${row.has_from_pricing ? "~" : ""}${formatGbp(Number(row.indicative_total_gbp))}`
-                        : "—"}
+                        : "Not priced"}
                     </td>
                     <td className="px-4 py-3">
                       {ENQUIRY_STATUS_LABEL[row.status as EnquiryStatus] ?? row.status}
@@ -443,7 +443,7 @@ function EnquiryDetail({
                   void navigator.clipboard
                     .writeText(handoff)
                     .then(() => toast.success("Copied"))
-                    .catch(() => toast.error("Couldn't copy — select the text instead."));
+                    .catch(() => toast.error("Couldn't copy. Select the text instead."));
                 }}
               >
                 Copy to clipboard

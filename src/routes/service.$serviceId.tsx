@@ -39,7 +39,7 @@ export const Route = createFileRoute("/service/$serviceId")({
     const service = loaderData?.service;
     if (!service) return {};
     const meta = pageMeta({
-      title: `${service.name} — BMW ${CATEGORY_LABEL[service.category].toLowerCase()} | Drive Precise`,
+      title: `${service.name}: BMW ${CATEGORY_LABEL[service.category].toLowerCase()} | Drive Precise`,
       description: service.shortDescription,
       path: `/service/${service.id}`,
     });
