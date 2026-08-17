@@ -1,0 +1,12 @@
+{
+  "//": "Config for `deno lint` over the edge functions. Deno would accept JSONC comments here, but Snyk's importer parses this as strict JSON and skips the file if it finds any, so the note lives in this key instead.",
+  "//no-import-prefix": "That rule objects to `https://` imports and tells you to declare a bare specifier instead. Right for a Deno application, wrong here: Supabase deploys each function directory as-is with no dependency install step, so remote URLs are how these are meant to be written. Leaving it on means errors that could never be fixed, which is the same as having no lint at all.",
+  "lint": {
+    "rules": {
+      "exclude": ["no-import-prefix"]
+    }
+  },
+  "fmt": {
+    "lineWidth": 90
+  }
+}

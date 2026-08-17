@@ -57,6 +57,48 @@ These come from the client brief and are enforced by tests, not just documented.
 8. **Not affiliated with BMW.** BMW is the specialism, not the employer. The
    footer says so on every page.
 
+## Managed From The Portal
+
+This site is administered from **ForgeLink Portal** (`automotive` vertical), not
+from its own `/admin`, which is a break-glass route. The Portal reaches this
+database through its proxy edge functions using the service role key.
+
+That key **bypasses RLS entirely**, and the Portal's table proxy selects every
+column when a page does not name them. So §60 cannot be enforced by RLS alone:
+
+- `services` is **refused** to the Portal outright (see the automotive vertical's
+  `deniedTables`). It carries `parts_cost_gbp`, `consumables_cost_gbp` and
+  `internal_notes`.
+- `get_admin_services()` / `get_admin_packages()` name their columns and are the
+  only way the Portal reads the catalogue. **Do not add a cost column to those
+  return types** — Portal org membership includes `staff` and `readonly`, and
+  margin is not staff information. A margin view should be a separate,
+  owner-gated function.
+
+Other Portal-facing surfaces, all added in `20260817000000_portal_integration.sql`:
+
+- `site_content` + `publish_log` + `preview_tokens` — the visual editor. Copy is
+  drafted, previewed through a 30-minute token, then published in one go.
+  `vercel.json` has allowed `frame-ancestors` from the Portal since launch.
+- `get_enquiry_pipeline()` — the funnel, including indicative vs quoted (§41).
+- `update_enquiry_status()` — the **only** way the Portal moves an enquiry. It
+  refuses a quoted status with no quote and a lost status with no reason, so the
+  report can never be asked to average a number that was never given.
+
+## Owner Alerts
+
+`20260817010000_owner_alert_dispatch.sql`. Before this, an enquiry landed in a
+table and nobody was told.
+
+Triggers **queue** rather than send: a customer's INSERT must never fail because
+an email provider is unreachable. `dispatch_owner_alerts()` sweeps the queue and
+calls the `notify-owner` edge function. Alerts can be up to a minute late, which
+is the right trade for never losing an enquiry.
+
+After deploying, schedule via pg_cron and set the function secrets
+(`RESEND_API_KEY`, `OWNER_EMAIL` or `notify_email` in the Portal, `SITE_URL`,
+`PORTAL_URL`) — the cron lines are in the migration header.
+
 ## Key Files
 
 - `src/lib/services.ts` — the catalogue. Types, seed data, pricing presentation.
@@ -69,6 +111,9 @@ These come from the client brief and are enforced by tests, not just documented.
 - `src/routes/quote.tsx` — the seven-step builder.
 - `supabase/migrations/` — schema, RLS and the definer functions that are the only
   public read and write paths.
+- `supabase/functions/notify-owner/` — the doorbell. Service-role only.
+- `supabase/functions/_shared/email-template.ts` — brand tokens + table-based
+  email layout, forked from the first client site. A new site is a palette swap.
 
 ## Prices Are Placeholders
 
