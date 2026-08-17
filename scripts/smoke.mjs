@@ -461,18 +461,21 @@ async function main() {
     }
 
     // Escape must close the overlay rather than leaving it stuck open.
+    //
+    // Waiting for the element to actually go away, rather than sleeping a
+    // fixed 250ms and then looking, is the difference between testing the
+    // behaviour and testing the machine's load average: the dialog's close
+    // transition lands somewhere around 220-330ms, so a fixed wait on that
+    // boundary reports a working overlay as broken about half the time.
+    const escBox = uiPage.getByRole("searchbox", { name: "Search services" });
     await uiPage.keyboard.press("Control+k");
-    await uiPage.waitForTimeout(250);
+    await escBox.waitFor({ state: "visible", timeout: 5_000 }).catch(() => {
+      fail("interactions", "search overlay did not reopen on Ctrl+K");
+    });
     await uiPage.keyboard.press("Escape");
-    await uiPage.waitForTimeout(250);
-    if (
-      await uiPage
-        .getByRole("searchbox", { name: "Search services" })
-        .isVisible()
-        .catch(() => false)
-    ) {
+    await escBox.waitFor({ state: "hidden", timeout: 5_000 }).catch(() => {
       fail("interactions", "Escape did not close the search overlay");
-    }
+    });
 
     if (failures.length === 0) console.log("  ✓ mega-panel, search overlay and keyboard control");
   } catch (error) {

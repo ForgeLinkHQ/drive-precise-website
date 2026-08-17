@@ -8,23 +8,34 @@
  * environment can still override any of them, so staging can point elsewhere
  * without a code change.
  *
- * One value is still outstanding: the registered office address. It is a
- * mandatory disclosure for a UK limited company and there is no honest default
- * for it, so it stays empty until set. `configurationIssues()` reports it and
- * the admin dashboard renders that list, which keeps the gap visible rather
- * than buried in a file.
- *
- * Anything genuinely unknown uses Ofcom's reserved drama ranges rather than an
- * invented number, so an unconfigured value reaches nobody instead of reaching
- * a stranger.
+ * `configurationIssues()` reports anything still missing and the admin
+ * dashboard renders that list, so a gap stays visible rather than buried in a
+ * file. Anything genuinely unknown uses Ofcom's reserved drama ranges rather
+ * than an invented number, so an unconfigured value reaches nobody instead of
+ * reaching a stranger.
  */
 
+/**
+ * An environment override, or undefined when there isn't a real one.
+ *
+ * A variable that is present but empty counts as absent. This matters more
+ * than it looks: `??` falls back only on null and undefined, so returning ""
+ * here would let a blank line in a `.env` file, or an environment variable
+ * added in Vercel and left empty, silently blank out a value that the defaults
+ * below are meant to guarantee. Several of those values are statutory
+ * disclosures, and losing one to a stray blank is not an acceptable failure
+ * mode. Whitespace-only is treated the same way.
+ */
 function env(key: string): string | undefined {
-  // import.meta.env for the client bundle, process.env for SSR — same pattern
-  // as the Supabase client.
-  const fromVite = (import.meta.env as Record<string, string | undefined>)[key];
+  // import.meta.env for the client bundle, process.env for SSR, the same
+  // pattern as the Supabase client.
+  const fromVite = (import.meta.env as Record<string, string | undefined>)[key]?.trim();
   if (fromVite) return fromVite;
-  if (typeof process !== "undefined" && process.env) return process.env[key];
+
+  if (typeof process !== "undefined" && process.env) {
+    const fromProcess = process.env[key]?.trim();
+    if (fromProcess) return fromProcess;
+  }
   return undefined;
 }
 
@@ -93,7 +104,8 @@ export const BUSINESS = {
    */
   companyNumber: env("VITE_COMPANY_NUMBER") ?? "15264715",
   placeOfRegistration: "England and Wales",
-  registeredAddress: env("VITE_REGISTERED_ADDRESS") ?? "",
+  registeredAddress:
+    env("VITE_REGISTERED_ADDRESS") ?? "26 Greenlands Road, Camberley, Surrey, GU15 2RT",
 
   /**
    * Drive Precise Ltd is not VAT registered.

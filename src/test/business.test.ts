@@ -61,12 +61,26 @@ describe("postcode coverage (§56)", () => {
 });
 
 describe("business configuration", () => {
-  it("still reports the registered office address as outstanding", () => {
-    // The one disclosure with no honest default. When it is finally set, this
-    // test should be updated to assert there are no issues at all, which is
-    // the point at which the site is legally complete.
-    const issues = configurationIssues();
-    expect(issues.join(" ")).toContain("Registered office address is not set");
+  it("has nothing left unconfigured", () => {
+    // Every statutory disclosure is now set, so this asserts the finished
+    // state rather than a known gap. If someone empties a value, or sets a VAT
+    // number while unregistered, this fails and names what broke.
+    expect(configurationIssues()).toEqual([]);
+  });
+
+  it("carries the registered office address required of a UK company", () => {
+    expect(BUSINESS.registeredAddress).toBe("26 Greenlands Road, Camberley, Surrey, GU15 2RT");
+  });
+
+  it("does not let a blank environment variable erase a real value", () => {
+    // This suite runs with a .env carrying empty entries, which is exactly the
+    // shape of the bug: `??` falls back only on null and undefined, so an
+    // override that reads "" would win over the default and silently drop a
+    // statutory disclosure. Every value below has an empty variable set for it
+    // somewhere, so if `env()` stops treating blank as absent, these go empty.
+    expect(BUSINESS.registeredAddress).not.toBe("");
+    expect(BUSINESS.companyNumber).not.toBe("");
+    expect(BUSINESS.email).not.toBe("");
   });
 
   it("carries a real phone number rather than a placeholder", () => {
