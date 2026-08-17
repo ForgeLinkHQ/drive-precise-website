@@ -85,6 +85,47 @@ export interface EventDetail {
   meta?: Record<string, string | number | boolean>;
 }
 
+/**
+ * Registration-shaped tokens, for stripping out of free text.
+ *
+ * Only the full-length formats, deliberately. A registration is 6 to 8
+ * characters, while BMW's own vocabulary is full of shorter things that look
+ * just like a dateless plate: M3, X5, 330d, E46, N47, B58. Matching those
+ * would gut the one analytics field that tells Drive Precise what people
+ * actually search for, to protect data nobody typed.
+ */
+const REGISTRATION_LIKE =
+  /\b(?=[A-Z0-9]{6,8}\b)(?:[A-Z]{2}\d{2}[A-Z]{3}|[A-Z]\d{1,3}[A-Z]{3}|[A-Z]{3}\d{1,3}[A-Z])\b/g;
+
+/**
+ * Free text with anything registration-shaped removed.
+ *
+ * The header of this file promises that no vehicle registration reaches an
+ * analytics event, and until this existed that promise was only true if every
+ * caller happened to behave. It wasn't: the search box sends what the customer
+ * typed, and people paste a registration into any text box on a garage's
+ * website. A registration is personal data under UK GDPR, the privacy policy
+ * says this system holds none, and a promise enforced by good intentions at
+ * the call site is not enforced at all.
+ */
+export function redactRegistrations(text: string): string {
+  return text
+    .replace(REGISTRATION_LIKE, "[reg]")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+/** Apply that guarantee to everything a caller attaches, not just the query. */
+function scrubMeta(
+  meta: Record<string, string | number | boolean>,
+): Record<string, string | number | boolean> {
+  const clean: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(meta)) {
+    clean[key] = typeof value === "string" ? redactRegistrations(value) : value;
+  }
+  return clean;
+}
+
 export async function track(name: SiteEvent, detail: EventDetail = {}): Promise<void> {
   if (!enabled()) return;
 
@@ -102,7 +143,7 @@ export async function track(name: SiteEvent, detail: EventDetail = {}): Promise<
       _utm_source: attribution.source ?? null,
       _utm_medium: attribution.medium ?? null,
       _utm_campaign: attribution.campaign ?? null,
-      _meta: (detail.meta ?? {}) as never,
+      _meta: scrubMeta(detail.meta ?? {}) as never,
     });
   } catch {
     // A counter is never worth an error boundary.

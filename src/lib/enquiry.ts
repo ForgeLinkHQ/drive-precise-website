@@ -118,17 +118,49 @@ export interface DraftValidation {
  * Precise needs to start the conversation — everything else is helpful, not
  * required.
  */
+/**
+ * The limits `create_enquiry` enforces in Postgres.
+ *
+ * Mirrored here on purpose. The RPC raises on anything outside these, which
+ * `submitEnquiry` can only catch and report as "we couldn't save your
+ * request" — a dead end offering the customer nothing to correct. Worse, it
+ * fires for exactly the wrong people: the ones who wrote a long, careful
+ * description of an awkward fault, or who built a large basket. Checking here
+ * turns a lost enquiry into a sentence next to the field.
+ *
+ * If a limit changes in the migration, change it here in the same commit.
+ */
+export const LIMITS = {
+  name: 120,
+  phone: 32,
+  email: 254,
+  registration: 16,
+  notes: 4000,
+  vehicleNotes: 4000,
+  items: 40,
+} as const;
+
 export function validateDraft(draft: QuoteDraft): DraftValidation {
   const errors: Record<string, string> = {};
 
   if (draft.items.length === 0) {
     errors.items = "Choose at least one service so we know what you'd like doing.";
+  } else if (draft.items.length > LIMITS.items) {
+    errors.items = `That's more than we can take in one request. Please send your first ${LIMITS.items} and we'll sort the rest out when we speak.`;
   }
-  if (!normaliseRegistration(draft.vehicle.registration)) {
+
+  const registration = normaliseRegistration(draft.vehicle.registration);
+  if (!registration) {
     errors.registration = "We need your registration to identify the right parts for your car.";
+  } else if (registration.length > LIMITS.registration) {
+    errors.registration = "That's longer than a registration can be. Please check it.";
   }
-  if (!draft.contact.name.trim()) {
+
+  const name = draft.contact.name.trim();
+  if (!name) {
     errors.name = "Please tell us your name.";
+  } else if (name.length > LIMITS.name) {
+    errors.name = "That name is too long for our system. Please shorten it.";
   }
 
   const phone = draft.contact.phone.replace(/[^0-9+]/g, "");
@@ -136,6 +168,8 @@ export function validateDraft(draft: QuoteDraft): DraftValidation {
     errors.phone = "Please give us a mobile number so we can confirm your quote.";
   } else if (phone.replace(/\D/g, "").length < 10) {
     errors.phone = "That number looks too short. Please check it.";
+  } else if (draft.contact.phone.trim().length > LIMITS.phone) {
+    errors.phone = "That number is too long. Please check it.";
   }
 
   const email = draft.contact.email.trim();
@@ -143,6 +177,15 @@ export function validateDraft(draft: QuoteDraft): DraftValidation {
   // but a typo in one that was supplied is worth catching.
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = "That email address doesn't look right. Please check it.";
+  } else if (email.length > LIMITS.email) {
+    errors.email = "That email address is too long. Please check it.";
+  }
+
+  if (draft.notes.trim().length > LIMITS.notes) {
+    errors.notes = `That's a lot of detail, which we'd rather have than not. Please trim it to ${LIMITS.notes} characters and tell us the rest on WhatsApp.`;
+  }
+  if (draft.vehicle.notes.trim().length > LIMITS.vehicleNotes) {
+    errors.vehicleNotes = `Please trim this to ${LIMITS.vehicleNotes} characters and tell us the rest on WhatsApp.`;
   }
 
   return { ok: Object.keys(errors).length === 0, errors };

@@ -155,15 +155,31 @@ function TradeForm() {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    // The length checks mirror what create_trade_enquiry enforces in Postgres.
+    // Without them the RPC raises, this form shows its generic failure, and the
+    // dealer who wrote a long description of their operation has no idea what
+    // to change. These are the highest-value enquiries on the site to lose.
     const nextErrors: Record<string, string> = {};
     if (!values.businessName.trim()) nextErrors.businessName = "Please give us your business name.";
+    else if (values.businessName.trim().length > 160)
+      nextErrors.businessName = "That's too long for our system. Please shorten it.";
+
     if (!values.contactName.trim())
       nextErrors.contactName = "Please tell us who we're speaking to.";
+    else if (values.contactName.trim().length > 120)
+      nextErrors.contactName = "That's too long for our system. Please shorten it.";
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
       nextErrors.email = "We need a working email address to send a proposal to.";
+    } else if (values.email.trim().length > 254) {
+      nextErrors.email = "That email address is too long. Please check it.";
     }
     if (values.phone.replace(/\D/g, "").length < 10) {
       nextErrors.phone = "Please give us a phone number we can reach you on.";
+    }
+    if (values.notes.trim().length > 4000) {
+      nextErrors.notes =
+        "That's a lot of detail, which we'd rather have than not. Please trim it to 4000 characters and send us the rest by email.";
     }
 
     setErrors(nextErrors);
@@ -403,7 +419,7 @@ function TradeForm() {
           )}
         </Field>
 
-        <Field label="Anything else">
+        <Field label="Anything else" error={errors.notes}>
           {(props) => (
             <Textarea
               {...props}

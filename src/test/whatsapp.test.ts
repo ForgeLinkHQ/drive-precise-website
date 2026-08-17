@@ -155,3 +155,55 @@ describe("the wa.me link", () => {
     expect(whatsappHref("line one\nline two", "447700900123")).toContain("%0A");
   });
 });
+
+describe("a very long message stays sendable", () => {
+  function longSnapshot(notes: string) {
+    return {
+      reference: null,
+      createdAt: new Date().toISOString(),
+      name: "Sam",
+      phone: "07000 000000",
+      email: "",
+      registration: "AB12CDE",
+      mileage: 52000,
+      vehicleDescription: "Model to confirm",
+      vehicleNotes: "",
+      items: [],
+      indicativeTotalGbp: 0,
+      hasFromPricing: false,
+      quoteOnlyCount: 0,
+      postcode: "GU15 2RT",
+      location: null,
+      locationLabel: null,
+      preferredDate: null,
+      preferredWindow: null,
+      preferredLabel: null,
+      notes,
+      referralSource: "direct" as const,
+      campaign: null,
+    };
+  }
+
+  it("never leaves a half-character that makes the link throw", () => {
+    // Nothing limits the notes field, and emoji are ordinary in a
+    // WhatsApp-shaped conversation. Cutting at a fixed offset can split a
+    // surrogate pair, and encodeURIComponent throws URIError on a lone
+    // surrogate — killing the handoff on the final "press Send" step.
+    for (let pad = 3900; pad < 4100; pad++) {
+      const message = buildWhatsAppMessage(longSnapshot("x".repeat(pad) + "\u{1F697}".repeat(40)));
+      expect(() => whatsappHref(message)).not.toThrow();
+      expect(encodeURIComponent(message)).toBeTruthy();
+    }
+  });
+
+  it("still respects the length limit", () => {
+    const message = buildWhatsAppMessage(longSnapshot("y".repeat(9000)));
+    expect(message.length).toBeLessThanOrEqual(4000);
+  });
+
+  it("leaves a message under the limit exactly as built", () => {
+    const message = buildWhatsAppMessage(longSnapshot("just a short note"));
+    expect(message).toContain("just a short note");
+    expect(message.endsWith("…")).toBe(false);
+  });
+});

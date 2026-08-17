@@ -151,10 +151,40 @@ export function currentAttribution(): Attribution {
   return attribution;
 }
 
+/**
+ * Stored attribution, or null if what came back isn't usable.
+ *
+ * Same reasoning as the quote draft: this is storage, so it is untrusted
+ * input, and casting it straight to `Attribution` was a lie that the rest of
+ * the module then relied on. `inferredSource` in particular is declared
+ * non-optional and travels all the way into the enquiry record, so a stored
+ * object without it would put `undefined` in the field the business uses to
+ * decide where its customers come from.
+ */
 function readStored(): Attribution | null {
   try {
     const raw = window.sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Attribution) : null;
+    if (!raw) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) return null;
+
+    const candidate = parsed as Record<string, unknown>;
+    const source = candidate.inferredSource;
+    if (typeof source !== "string" || !(source in REFERRAL_SOURCE_LABEL)) return null;
+
+    const text = (value: unknown): string | undefined =>
+      typeof value === "string" && value ? value : undefined;
+
+    return {
+      source: text(candidate.source),
+      medium: text(candidate.medium),
+      campaign: text(candidate.campaign),
+      term: text(candidate.term),
+      content: text(candidate.content),
+      referrerHost: text(candidate.referrerHost),
+      inferredSource: source as ReferralSource,
+    };
   } catch {
     return null;
   }

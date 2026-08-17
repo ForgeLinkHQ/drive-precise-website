@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { EMPTY_DRAFT, type QuoteDraft } from "@/lib/basket";
-import { buildSnapshot, validateDraft, ENQUIRY_STATUS_LABEL, OPEN_STATUSES } from "@/lib/enquiry";
+import {
+  buildSnapshot,
+  validateDraft,
+  ENQUIRY_STATUS_LABEL,
+  LIMITS,
+  OPEN_STATUSES,
+} from "@/lib/enquiry";
 
 function draft(overrides: Partial<QuoteDraft> = {}): QuoteDraft {
   return {
@@ -172,5 +178,139 @@ describe("enquiry statuses (§27)", () => {
 
   it("covers all nine statuses the brief lists", () => {
     expect(Object.keys(ENQUIRY_STATUS_LABEL)).toHaveLength(9);
+  });
+});
+
+describe("client validation matches what Postgres will accept", () => {
+  /**
+   * create_enquiry raises on anything outside these limits, and submitEnquiry
+   * can only turn that into "we couldn't save your request" — a dead end with
+   * nothing for the customer to correct. Each case below reached the database
+   * and came back as that generic failure before validateDraft checked it.
+   */
+
+  function draftWith(overrides: Partial<QuoteDraft> = {}): QuoteDraft {
+    return {
+      ...EMPTY_DRAFT,
+      vehicle: { registration: "AB12CDE", mileage: "52000", notes: "" },
+      items: [{ kind: "service", id: "minor-service", addedAt: 1 }],
+      contact: { name: "Sam", phone: "07000 000000", email: "" },
+      ...overrides,
+    };
+  }
+
+  it("accepts a normal request", () => {
+    expect(validateDraft(draftWith()).ok).toBe(true);
+  });
+
+  it("catches a note longer than the database column allows", () => {
+    // The realistic one: someone describing an awkward intermittent fault.
+    const result = validateDraft(draftWith({ notes: "x".repeat(LIMITS.notes + 1) }));
+    expect(result.ok).toBe(false);
+    expect(result.errors.notes).toBeTruthy();
+  });
+
+  it("accepts a note exactly on the limit", () => {
+    expect(validateDraft(draftWith({ notes: "x".repeat(LIMITS.notes) })).ok).toBe(true);
+  });
+
+  it("catches a basket larger than the database allows", () => {
+    const items = Array.from({ length: LIMITS.items + 1 }, (_, i) => ({
+      kind: "service" as const,
+      id: `service-${i}`,
+      addedAt: i,
+    }));
+    const result = validateDraft(draftWith({ items }));
+    expect(result.ok).toBe(false);
+    expect(result.errors.items).toBeTruthy();
+  });
+
+  it("accepts a basket exactly on the limit", () => {
+    const items = Array.from({ length: LIMITS.items }, (_, i) => ({
+      kind: "service" as const,
+      id: `service-${i}`,
+      addedAt: i,
+    }));
+    expect(validateDraft(draftWith({ items })).ok).toBe(true);
+  });
+
+  it("catches an over-long name, phone and email", () => {
+    expect(
+      validateDraft(
+        draftWith({ contact: { name: "n".repeat(121), phone: "07000000000", email: "" } }),
+      ).errors.name,
+    ).toBeTruthy();
+    expect(
+      validateDraft(
+        draftWith({ contact: { name: "Sam", phone: `0700000000${"0".repeat(30)}`, email: "" } }),
+      ).errors.phone,
+    ).toBeTruthy();
+    expect(
+      validateDraft(
+        draftWith({
+          contact: { name: "Sam", phone: "07000000000", email: `${"e".repeat(250)}@example.com` },
+        }),
+      ).errors.email,
+    ).toBeTruthy();
+  });
+
+  it("catches an over-long vehicle note", () => {
+    const result = validateDraft(
+      draftWith({
+        vehicle: {
+          registration: "AB12CDE",
+          mileage: "",
+          notes: "v".repeat(LIMITS.vehicleNotes + 1),
+        },
+      }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors.vehicleNotes).toBeTruthy();
+  });
+
+  it("explains the problem in plain English, with no codes (§49)", () => {
+    const result = validateDraft(draftWith({ notes: "x".repeat(LIMITS.notes + 1) }));
+    for (const message of Object.values(result.errors)) {
+      expect(message).toMatch(/[a-z]/);
+      expect(message).not.toMatch(/error|invalid|constraint|null|undefined|P0001|\bcode\b/i);
+    }
+  });
+});
+
+describe("every validation error can actually reach the customer", () => {
+  it("produces only keys the quote form knows how to show", () => {
+    /**
+     * quote.tsx renders each of these next to its field and routes the
+     * customer back to the step that owns it. An error key that isn't in this
+     * list would block submission while displaying nothing: the button stops
+     * working and no reason is given.
+     *
+     * If this fails, a new validation rule was added. Render it in quote.tsx
+     * and route it in onSubmit, then add it here.
+     */
+    const handled = new Set([
+      "items",
+      "registration",
+      "vehicleNotes",
+      "name",
+      "phone",
+      "email",
+      "notes",
+    ]);
+
+    // A draft that violates every rule at once, so every key appears.
+    const worst = {
+      ...EMPTY_DRAFT,
+      vehicle: { registration: "", mileage: "", notes: "v".repeat(LIMITS.vehicleNotes + 1) },
+      items: [],
+      contact: { name: "", phone: "", email: "not-an-email" },
+      notes: "x".repeat(LIMITS.notes + 1),
+    };
+
+    const keys = Object.keys(validateDraft(worst).errors);
+    expect(keys.length).toBeGreaterThan(0);
+    for (const key of keys) {
+      expect(handled.has(key), `"${key}" is not rendered by the quote form`).toBe(true);
+    }
   });
 });

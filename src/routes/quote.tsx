@@ -152,8 +152,11 @@ function QuotePage() {
     if (!validation.ok) {
       setErrors(validation.errors);
       // Send them back to the step that owns the first problem, rather than
-      // showing an error about a field that isn't on screen.
-      if (validation.errors.registration) setStep("vehicle");
+      // showing an error about a field that isn't on screen. Every key
+      // validateDraft can produce is routed here: a message on a step the
+      // customer cannot see is the same as no message at all, and it leaves
+      // them with a button that refuses to work and no reason given.
+      if (validation.errors.registration || validation.errors.vehicleNotes) setStep("vehicle");
       else if (validation.errors.items) setStep("services");
       else setStep("details");
       return;
@@ -418,6 +421,7 @@ function VehicleStep({ errors, onNext }: { errors: Record<string, string>; onNex
       <Field
         label="Anything you'd like to mention about the car?"
         hint="Noises, warning lights, when you last had it serviced, whatever seems relevant."
+        error={errors.vehicleNotes}
       >
         {(props) => (
           <Textarea
@@ -725,7 +729,7 @@ function DetailsStep({
         )}
       </Field>
 
-      <Field label="Anything else we should know?">
+      <Field label="Anything else we should know?" error={errors.notes}>
         {(props) => (
           <Textarea
             {...props}

@@ -66,6 +66,33 @@ function isCategory(value: string): value is ServiceCategory {
 }
 
 /**
+ * The remaining enum columns, checked rather than asserted.
+ *
+ * `also_in` was already filtered against the known categories; these three
+ * were cast straight across. A cast is a claim about data this code does not
+ * control, and the claim shows up on the page: an unrecognised partner
+ * category renders a suggestion card whose description resolves to undefined,
+ * so the customer gets a partner panel with a heading and no text. Filtering
+ * costs nothing and makes the type honest.
+ */
+const SEASONS: Season[] = ["winter", "spring", "summer", "autumn"];
+const PARTNER_CATEGORIES: PartnerCategory[] = [
+  "tyres",
+  "alignment",
+  "mot",
+  "wheel-refurb",
+  "bodywork",
+  "paint",
+  "glass",
+  "adas",
+  "detailing",
+];
+
+function onlyKnown<T extends string>(values: string[], allowed: T[]): T[] {
+  return values.filter((v): v is T => (allowed as string[]).includes(v));
+}
+
+/**
  * A database row as a `Service`.
  *
  * Returns null rather than a half-built object when something essential is
@@ -108,13 +135,16 @@ export function rowToService(row: PublicServiceRow): Service | null {
     requiresPartsQuote: row.requires_parts_quote ?? false,
     addOns: stringArray(row.add_ons),
     incompatibleWith: stringArray(row.incompatible_with),
-    suggestsPartner: stringArray(row.suggests_partner) as PartnerCategory[],
-    seasons: stringArray(row.seasons) as Season[],
+    suggestsPartner: onlyKnown(stringArray(row.suggests_partner), PARTNER_CATEGORIES),
+    seasons: onlyKnown(stringArray(row.seasons), SEASONS),
     alsoIn: stringArray(row.also_in).filter(isCategory),
     customerType: (["retail", "trade", "both"] as const).includes(row.customer_type as CustomerType)
       ? (row.customer_type as CustomerType)
       : "both",
-    modStream: (row.mod_stream ?? undefined) as ModStream | undefined,
+    // "fit" and "remove" split the modifications pages in two. An unrecognised
+    // value would put the service in neither, so it is dropped explicitly
+    // rather than carried as a lie about its type.
+    modStream: row.mod_stream === "fit" || row.mod_stream === "remove" ? row.mod_stream : undefined,
     addOnOnly: row.add_on_only ?? false,
     featured: row.featured ?? false,
     active: true, // the RPC only returns active rows
@@ -127,6 +157,14 @@ export function rowToPackage(row: PublicPackageRow): ServicePackage | null {
 
   const priceGbp = num(row.price_gbp);
   if (row.pricing !== "quote" && priceGbp === undefined) return null;
+  // The same rejection `rowToService` makes, for the same reason and with more
+  // at stake: a negative package price does not just render oddly, it
+  // *subtracts* from the basket estimate and feeds `packageUpgrades()`, where
+  // it would manufacture a saving out of bad data. §25 says savings come from
+  // real configured pricing, and this is where that stops being true.
+  if (priceGbp !== undefined && priceGbp < 0) return null;
+
+  const duration = num(row.duration_minutes);
 
   return {
     id: row.id,
@@ -138,8 +176,10 @@ export function rowToPackage(row: PublicPackageRow): ServicePackage | null {
     pricing: row.pricing,
     priceGbp: row.pricing === "quote" ? undefined : priceGbp,
     priceConfirmed: false,
-    durationMinutes: num(row.duration_minutes),
-    seasons: stringArray(row.seasons) as Season[],
+    // Matches the service mapping: a zero or negative duration is bad data,
+    // and `basketTotals` sums these into the time-on-site estimate.
+    durationMinutes: duration !== undefined && duration > 0 ? duration : undefined,
+    seasons: onlyKnown(stringArray(row.seasons), SEASONS),
     customerType: (["retail", "trade", "both"] as const).includes(row.customer_type as CustomerType)
       ? (row.customer_type as CustomerType)
       : "retail",
