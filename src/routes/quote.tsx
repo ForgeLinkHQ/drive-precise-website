@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { RegPlate, RegPlateInput } from "@/components/site/reg-plate";
 import { BuilderSummaryBar } from "@/components/site/builder-summary-bar";
+import { VehicleConfirmation } from "@/components/site/vehicle-confirmation";
 import { pageMeta } from "@/lib/seo";
 import { useCatalogue } from "@/lib/service-catalog";
 import {
@@ -405,6 +406,11 @@ function VehicleStep({ errors, onNext }: { errors: Record<string, string>; onNex
           (looksWrong ? "That doesn't look like a UK registration. Please check it." : undefined)
         }
       />
+
+      {/* Confirms the car back to the customer from the DVLA record. Renders
+          nothing at all when the lookup is unconfigured or unavailable, so
+          this step behaves exactly as it did before the feature existed. */}
+      <VehicleConfirmation registration={reg} onFound={(lookup) => setVehicle({ lookup })} />
 
       <Field label="Mileage" hint="Roughly is fine. It helps us tell you what's due.">
         {(props) => (

@@ -347,6 +347,14 @@ export type Database = {
           _customer_notes: string | null;
           _referral_source: string | null;
           _campaign: string | null;
+          // Optional in Postgres, so optional here: an unconfigured lookup
+          // simply omits them.
+          _vehicle_make?: string | null;
+          _vehicle_model?: string | null;
+          _vehicle_variant?: string | null;
+          _vehicle_year?: number | null;
+          _vehicle_fuel?: string | null;
+          _vehicle_engine?: string | null;
         };
         Returns: string;
       };

@@ -18,6 +18,7 @@ import { basketTotals, resolveItems, type QuoteDraft, type ServiceLocation } fro
 import { currentAttribution, type ReferralSource } from "./attribution";
 import { SERVICES, type Service } from "./services";
 import { describeVehicle, normaliseRegistration, parseMileage } from "./vehicle";
+import { describeLookup, formatEngine } from "./vehicle-lookup";
 
 /** The lifecycle of an enquiry (§27). */
 export type EnquiryStatus =
@@ -86,6 +87,19 @@ export interface EnquirySnapshot {
   mileage: number | null;
   vehicleDescription: string;
   vehicleNotes: string;
+  /**
+   * What the register said, when a lookup found it (§21).
+   *
+   * Separate fields rather than a blob because this is what makes an enquiry
+   * quotable: knowing a car is a 2018 1995cc diesel is most of what deciding
+   * which parts it takes requires. `vehicleModel` is normally null, because
+   * DVLA does not return a model and nothing here will invent one.
+   */
+  vehicleMake: string | null;
+  vehicleModel: string | null;
+  vehicleYear: number | null;
+  vehicleFuel: string | null;
+  vehicleEngine: string | null;
 
   items: EnquiryLineItem[];
   indicativeTotalGbp: number;
@@ -230,6 +244,7 @@ export function buildSnapshot(
   const resolved = resolveItems(draft.items, services);
   const totals = basketTotals(resolved);
   const attribution = currentAttribution();
+  const lookup = draft.vehicle.lookup;
 
   return {
     reference: null,
@@ -241,12 +256,20 @@ export function buildSnapshot(
 
     registration: normaliseRegistration(draft.vehicle.registration),
     mileage: parseMileage(draft.vehicle.mileage),
-    // No lookup at launch, so there is nothing to describe beyond what the
-    // customer told us (§21). Never invented.
-    vehicleDescription: describeVehicle({
-      registration: normaliseRegistration(draft.vehicle.registration),
-    }),
+    // Whatever the register returned, and nothing more (§21). With no lookup
+    // this still falls back to "Model to confirm" rather than a guess.
+    vehicleDescription:
+      (lookup ? describeLookup(lookup) : null) ??
+      describeVehicle({ registration: normaliseRegistration(draft.vehicle.registration) }),
     vehicleNotes: draft.vehicle.notes.trim(),
+
+    vehicleMake: lookup?.make ?? null,
+    vehicleModel: lookup?.model ?? null,
+    vehicleYear: lookup?.yearOfManufacture ?? null,
+    vehicleFuel: lookup?.fuelType ?? null,
+    // Stored as the number a human recognises rather than raw cc, because it
+    // is read by a person deciding which parts to order.
+    vehicleEngine: lookup?.engineCapacityCc ? formatEngine(lookup.engineCapacityCc) : null,
 
     items: resolved.map((item) => ({
       kind: item.kind,
@@ -312,6 +335,14 @@ export async function submitEnquiry(snapshot: EnquirySnapshot): Promise<SubmitRe
       _customer_notes: snapshot.notes || null,
       _referral_source: snapshot.referralSource,
       _campaign: snapshot.campaign,
+      // Null unless a lookup found them. The columns have been waiting for a
+      // provider since the schema was written.
+      _vehicle_make: snapshot.vehicleMake,
+      _vehicle_model: snapshot.vehicleModel,
+      _vehicle_variant: null,
+      _vehicle_year: snapshot.vehicleYear,
+      _vehicle_fuel: snapshot.vehicleFuel,
+      _vehicle_engine: snapshot.vehicleEngine,
     });
 
     if (error || !data) {

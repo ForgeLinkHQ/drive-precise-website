@@ -13,6 +13,11 @@ const BASE: EnquirySnapshot = {
   mileage: 52400,
   vehicleDescription: "Model to confirm",
   vehicleNotes: "",
+  vehicleMake: null,
+  vehicleModel: null,
+  vehicleYear: null,
+  vehicleFuel: null,
+  vehicleEngine: null,
   items: [
     { kind: "service", id: "minor-service", name: "Minor Service", pricing: "from", priceGbp: 149 },
     {
@@ -168,6 +173,11 @@ describe("a very long message stays sendable", () => {
       mileage: 52000,
       vehicleDescription: "Model to confirm",
       vehicleNotes: "",
+      vehicleMake: null,
+      vehicleModel: null,
+      vehicleYear: null,
+      vehicleFuel: null,
+      vehicleEngine: null,
       items: [],
       indicativeTotalGbp: 0,
       hasFromPricing: false,

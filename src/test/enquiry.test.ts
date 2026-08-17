@@ -21,7 +21,7 @@ function draft(overrides: Partial<QuoteDraft> = {}): QuoteDraft {
 }
 
 const COMPLETE = draft({
-  vehicle: { registration: "AB12 CDE", mileage: "52,400", notes: "" },
+  vehicle: { registration: "AB12 CDE", mileage: "52,400", notes: "", lookup: null },
   items: [{ kind: "service", id: "minor-service", addedAt: 0 }],
   contact: { name: "John Smith", phone: "07700900123", email: "john@example.com" },
 });
@@ -39,7 +39,7 @@ describe("what the form insists on (§59)", () => {
 
   it("insists on a registration", () => {
     const result = validateDraft(
-      draft({ ...COMPLETE, vehicle: { registration: "", mileage: "", notes: "" } }),
+      draft({ ...COMPLETE, vehicle: { registration: "", mileage: "", notes: "", lookup: null } }),
     );
     expect(result.ok).toBe(false);
     expect(result.errors.registration).toBeTruthy();
@@ -192,7 +192,7 @@ describe("client validation matches what Postgres will accept", () => {
   function draftWith(overrides: Partial<QuoteDraft> = {}): QuoteDraft {
     return {
       ...EMPTY_DRAFT,
-      vehicle: { registration: "AB12CDE", mileage: "52000", notes: "" },
+      vehicle: { registration: "AB12CDE", mileage: "52000", notes: "", lookup: null },
       items: [{ kind: "service", id: "minor-service", addedAt: 1 }],
       contact: { name: "Sam", phone: "07000 000000", email: "" },
       ...overrides,
@@ -261,6 +261,7 @@ describe("client validation matches what Postgres will accept", () => {
           registration: "AB12CDE",
           mileage: "",
           notes: "v".repeat(LIMITS.vehicleNotes + 1),
+          lookup: null,
         },
       }),
     );
@@ -301,7 +302,12 @@ describe("every validation error can actually reach the customer", () => {
     // A draft that violates every rule at once, so every key appears.
     const worst = {
       ...EMPTY_DRAFT,
-      vehicle: { registration: "", mileage: "", notes: "v".repeat(LIMITS.vehicleNotes + 1) },
+      vehicle: {
+        registration: "",
+        mileage: "",
+        notes: "v".repeat(LIMITS.vehicleNotes + 1),
+        lookup: null,
+      },
       items: [],
       contact: { name: "", phone: "", email: "not-an-email" },
       notes: "x".repeat(LIMITS.notes + 1),

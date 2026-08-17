@@ -27,7 +27,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { SERVICES, getServiceById, type Service } from "./services";
 import { getPackageById, packageServices, type ServicePackage } from "./packages";
-import type { VehicleDetails } from "./vehicle";
+import { parseVehicle, type LookedUpVehicle } from "./vehicle-lookup";
 
 export type ServiceLocation = "home" | "workplace" | "collection" | "unsure";
 export type TimeWindow = "morning" | "afternoon" | "flexible";
@@ -40,7 +40,21 @@ export interface BasketItem {
 }
 
 export interface QuoteDraft {
-  vehicle: { registration: string; mileage: string; notes: string };
+  vehicle: {
+    registration: string;
+    mileage: string;
+    notes: string;
+    /**
+     * What the register said about this plate, when a lookup found it.
+     *
+     * Kept in the draft rather than in component state so it survives a
+     * reload: a customer who half-builds a quote on the train and finishes it
+     * that evening should not have their vehicle silently forgotten between
+     * the two, and the enquiry record is only worth anything if the details
+     * are still attached when they press send.
+     */
+    lookup: LookedUpVehicle | null;
+  };
   items: BasketItem[];
   location: { kind: ServiceLocation | null; postcode: string };
   timing: { preferredDate: string; window: TimeWindow | null };
@@ -49,7 +63,7 @@ export interface QuoteDraft {
 }
 
 export const EMPTY_DRAFT: QuoteDraft = {
-  vehicle: { registration: "", mileage: "", notes: "" },
+  vehicle: { registration: "", mileage: "", notes: "", lookup: null },
   items: [],
   location: { kind: null, postcode: "" },
   timing: { preferredDate: "", window: null },
@@ -119,6 +133,9 @@ export function sanitiseDraft(parsed: unknown): QuoteDraft {
       registration: str(vehicle.registration),
       mileage: str(vehicle.mileage),
       notes: str(vehicle.notes),
+      // Through the same parser the network response goes through, for the
+      // same reason: a stored lookup is untrusted input too.
+      lookup: parseVehicle(vehicle.lookup),
     },
     items: Array.isArray(raw.items) ? raw.items.filter(isBasketItem) : [],
     location: {
