@@ -23,6 +23,7 @@ const TABS = [
   { to: "/admin", label: "Overview", exact: true },
   { to: "/admin/enquiries", label: "Enquiries" },
   { to: "/admin/catalogue", label: "Catalogue" },
+  { to: "/admin/promotions", label: "Promotions" },
   { to: "/admin/partners", label: "Partners" },
   { to: "/admin/referrals", label: "Referrals" },
 ] as const;

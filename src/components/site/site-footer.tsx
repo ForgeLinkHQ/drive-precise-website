@@ -51,6 +51,11 @@ export function SiteFooter() {
                   Packages
                 </Link>
               </li>
+              <li>
+                <Link to="/promotions" className="text-muted-foreground hover:text-accent">
+                  Seasonal offers
+                </Link>
+              </li>
             </ul>
           </div>
 

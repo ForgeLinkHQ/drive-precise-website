@@ -226,6 +226,56 @@ export type PublicPartnerRow = {
   public_summary: string | null;
 };
 
+export type PromotionRow = {
+  id: string;
+  service_id: string;
+  promo_price_gbp: number | string;
+  headline: string;
+  reason: string | null;
+  terms: string | null;
+  season: string | null;
+  starts_on: string;
+  ends_on: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * What `get_active_promotions()` returns.
+ *
+ * Only promotions whose saving the database could substantiate: the reference
+ * is the service's current catalogue price, it had held for at least 30 days
+ * when the promotion began, and the promotion does not run longer than that.
+ * Anything it cannot prove simply is not in this set.
+ */
+export type ActivePromotionRow = {
+  id: string;
+  service_id: string;
+  service_name: string;
+  headline: string;
+  reason: string | null;
+  terms: string | null;
+  season: string | null;
+  promo_price_gbp: number | string;
+  reference_price_gbp: number | string;
+  ends_on: string;
+};
+
+/** Admin-only: the same promotions plus why each is or isn't publishable. */
+export type PromotionDiagnosticRow = {
+  id: string;
+  headline: string;
+  service_id: string;
+  promo_price_gbp: number | string;
+  reference_price_gbp: number | string | null;
+  established_days: number | null;
+  starts_on: string;
+  ends_on: string;
+  is_publishable: boolean;
+  blocked_reason: string | null;
+};
+
 export type PartnerReferralRow = {
   id: string;
   partner_id: string | null;
@@ -282,6 +332,16 @@ export type Database = {
         Row: PartnerRow;
         Insert: Partial<PartnerRow> & Pick<PartnerRow, "business_name" | "category">;
         Update: Partial<PartnerRow>;
+        Relationships: [];
+      };
+      promotions: {
+        Row: PromotionRow;
+        Insert: Partial<PromotionRow> &
+          Pick<
+            PromotionRow,
+            "service_id" | "promo_price_gbp" | "headline" | "starts_on" | "ends_on"
+          >;
+        Update: Partial<PromotionRow>;
         Relationships: [];
       };
       partner_referrals: {
@@ -378,6 +438,14 @@ export type Database = {
           _vehicle_engine?: string | null;
         };
         Returns: string;
+      };
+      get_active_promotions: {
+        Args: Record<string, never>;
+        Returns: ActivePromotionRow[];
+      };
+      promotion_diagnostics: {
+        Args: Record<string, never>;
+        Returns: PromotionDiagnosticRow[];
       };
       get_public_partners: {
         Args: Record<string, never>;

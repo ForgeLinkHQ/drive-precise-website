@@ -39,6 +39,7 @@ const MOBILE_ITEM =
 
 const MOBILE_LINKS = [
   { to: "/packages", label: "Packages" },
+  { to: "/promotions", label: "Seasonal offers" },
   { to: "/how-it-works", label: "How It Works" },
   { to: "/service-areas", label: "Areas we cover" },
   { to: "/partners", label: "Who we work with" },

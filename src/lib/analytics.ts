@@ -29,6 +29,8 @@ export type SiteEvent =
   | "symptom_selected"
   | "search_performed"
   | "vehicle_looked_up"
+  | "promotion_shown"
+  | "promotion_taken"
   | "builder_started"
   | "service_added"
   | "service_removed"

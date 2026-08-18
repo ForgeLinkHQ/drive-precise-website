@@ -63,6 +63,7 @@ const ROUTES = [
   "/service/front-discs-pads",
   "/checks",
   "/packages",
+  "/promotions",
   "/modifications",
   "/return-to-standard",
   "/how-it-works",
