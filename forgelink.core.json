@@ -1,0 +1,103 @@
+{
+  "coreVersion": "1.0.0",
+  "publishedAt": "2026-08-18",
+  "canonical": "forgelink-portal/core",
+  "clientIdentityDenylist": [
+    "Drive Precise",
+    "driveprecise.co.uk",
+    "C. Beauty",
+    "charbeauty",
+    "cbeauty",
+    "Brandon M Stephen",
+    "07466 338404",
+    "447466338404",
+    "15264715",
+    "Greenlands Road"
+  ],
+  "files": {
+    "FORGELINK_LAW.md": "4f49896b033ae506c8950a0e1d3436d4ee92d05a6537fb3487794db727b9163b",
+    "site/src/lib/utils.ts": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27"
+  },
+  "duplication": [
+    {
+      "path": "supabase/functions/_shared/http.ts",
+      "alsoKnownAs": [
+        "supabase/functions/_shared/cors.ts"
+      ],
+      "repos": [
+        "char-beauty-app",
+        "drive-precise-website"
+      ],
+      "status": "queued",
+      "owner": "brandon",
+      "measured": "Written twice 19 hours apart under different names. char-beauty consolidated 21 copies into http.ts; drive-precise created cors.ts.",
+      "note": "The founding example of the law. Unify after both clients are live: it touches 20+ edge functions in char-beauty."
+    },
+    {
+      "path": "supabase/functions/_shared/email-template.ts",
+      "repos": [
+        "char-beauty-app",
+        "drive-precise-website"
+      ],
+      "status": "queued",
+      "owner": "brandon",
+      "measured": "268 lines vs 113, only 38 in common.",
+      "note": "The table-based layout is function. The brand block is semantics and becomes a parameter."
+    },
+    {
+      "path": "supabase/functions/_shared/owner-recipient.ts",
+      "repos": [
+        "char-beauty-app",
+        "drive-precise-website"
+      ],
+      "status": "queued",
+      "owner": "brandon",
+      "measured": "76 lines vs 75, only 43 in common.",
+      "note": "Same filename, same job, already drifted at two clients."
+    },
+    {
+      "path": "src/lib/contact-links.ts",
+      "repos": [
+        "char-beauty-app",
+        "drive-precise-website"
+      ],
+      "status": "queued",
+      "owner": "brandon",
+      "measured": "39 lines vs 34, 25 in common.",
+      "note": "Closest to unifiable. Good second candidate after utils.ts."
+    },
+    {
+      "path": "src/lib/analytics.ts",
+      "repos": [
+        "char-beauty-app",
+        "drive-precise-website"
+      ],
+      "status": "queued",
+      "owner": "brandon",
+      "measured": "165 lines vs 159, 72 in common.",
+      "note": "Event names are semantics. The transport, the do-not-track check and the redaction are function."
+    },
+    {
+      "path": "src/lib/service-catalog.ts",
+      "repos": [
+        "char-beauty-app",
+        "drive-precise-website"
+      ],
+      "status": "queued",
+      "owner": "brandon",
+      "measured": "226 lines vs 287, 90 in common.",
+      "note": "Row mapping and guards are function. The catalogue shape is per trade."
+    },
+    {
+      "path": "public/og-image.jpg + favicon.ico + robots.txt + sitemap.xml",
+      "repos": [
+        "char-beauty-app",
+        "drive-precise-website"
+      ],
+      "status": "open-defect",
+      "owner": "brandon",
+      "measured": "drive-precise has no public/ directory at all while its code references /og-image.jpg and /favicon.ico. char-beauty's og-image fix is on an unmerged branch.",
+      "note": "Not a shared file but a shared convention. Core owns the contract test, each client owns the artwork."
+    }
+  ]
+}
