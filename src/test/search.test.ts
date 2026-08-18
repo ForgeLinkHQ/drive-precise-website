@@ -110,3 +110,44 @@ describe("site search (§53)", () => {
     }
   });
 });
+
+describe("search survives whatever gets typed into it", () => {
+  // The synonym table is keyed by customer input. When it was a plain object,
+  // lookup walked the prototype chain: searching "constructor" returned a
+  // function, `?? []` let it through because a function is not nullish, and
+  // iterating it threw. The search box is on every page.
+  const nasty = [
+    "constructor",
+    "prototype",
+    "__proto__",
+    "toString",
+    "valueOf",
+    "hasOwnProperty",
+    "__defineGetter__",
+    "constructor prototype",
+    "brakes constructor",
+  ];
+
+  it("does not throw on prototype keys", () => {
+    for (const query of nasty) {
+      expect(() => searchCatalogue(query), `query: ${query}`).not.toThrow();
+    }
+  });
+
+  it("returns a real array for them rather than something object-shaped", () => {
+    for (const query of nasty) {
+      expect(Array.isArray(searchCatalogue(query))).toBe(true);
+    }
+  });
+
+  it("still finds the real result when a prototype key is mixed in", () => {
+    const results = searchCatalogue("constructor knocking");
+    expect(results.some((r) => r.kind === "service")).toBe(true);
+  });
+
+  it("does not throw on punctuation, emoji or very long input", () => {
+    for (const query of ["!!!", "🚗🚗🚗", "a".repeat(5000), "<script>alert(1)</script>", "   "]) {
+      expect(() => searchCatalogue(query)).not.toThrow();
+    }
+  });
+});

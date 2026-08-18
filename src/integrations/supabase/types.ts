@@ -201,8 +201,79 @@ export type PartnerRow = {
   commission_value: number | string | null;
   is_active: boolean;
   internal_notes: string | null;
+  website: string | null;
+  public_summary: string | null;
+  /** Has this business agreed to be named publicly? Defaults false. */
+  is_publicly_listed: boolean;
   created_at: string;
   updated_at: string;
+};
+
+/**
+ * A partner as a browser may see one.
+ *
+ * Deliberately built by naming the five safe columns rather than by `Omit`ing
+ * the unsafe ones. An Omit silently re-exposes anything added to PartnerRow
+ * later; this cannot. `commission_value`, `trade_arrangement` and
+ * `internal_notes` are Drive Precise's negotiated position with each business
+ * and must never reach the client.
+ */
+export type PublicPartnerRow = {
+  business_name: string;
+  category: string;
+  location: string | null;
+  website: string | null;
+  public_summary: string | null;
+};
+
+export type PromotionRow = {
+  id: string;
+  service_id: string;
+  promo_price_gbp: number | string;
+  headline: string;
+  reason: string | null;
+  terms: string | null;
+  season: string | null;
+  starts_on: string;
+  ends_on: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * What `get_active_promotions()` returns.
+ *
+ * Only promotions whose saving the database could substantiate: the reference
+ * is the service's current catalogue price, it had held for at least 30 days
+ * when the promotion began, and the promotion does not run longer than that.
+ * Anything it cannot prove simply is not in this set.
+ */
+export type ActivePromotionRow = {
+  id: string;
+  service_id: string;
+  service_name: string;
+  headline: string;
+  reason: string | null;
+  terms: string | null;
+  season: string | null;
+  promo_price_gbp: number | string;
+  reference_price_gbp: number | string;
+  ends_on: string;
+};
+
+/** Admin-only: the same promotions plus why each is or isn't publishable. */
+export type PromotionDiagnosticRow = {
+  id: string;
+  headline: string;
+  service_id: string;
+  promo_price_gbp: number | string;
+  reference_price_gbp: number | string | null;
+  established_days: number | null;
+  starts_on: string;
+  ends_on: string;
+  is_publishable: boolean;
+  blocked_reason: string | null;
 };
 
 export type PartnerReferralRow = {
@@ -261,6 +332,16 @@ export type Database = {
         Row: PartnerRow;
         Insert: Partial<PartnerRow> & Pick<PartnerRow, "business_name" | "category">;
         Update: Partial<PartnerRow>;
+        Relationships: [];
+      };
+      promotions: {
+        Row: PromotionRow;
+        Insert: Partial<PromotionRow> &
+          Pick<
+            PromotionRow,
+            "service_id" | "promo_price_gbp" | "headline" | "starts_on" | "ends_on"
+          >;
+        Update: Partial<PromotionRow>;
         Relationships: [];
       };
       partner_referrals: {
@@ -347,8 +428,28 @@ export type Database = {
           _customer_notes: string | null;
           _referral_source: string | null;
           _campaign: string | null;
+          // Optional in Postgres, so optional here: an unconfigured lookup
+          // simply omits them.
+          _vehicle_make?: string | null;
+          _vehicle_model?: string | null;
+          _vehicle_variant?: string | null;
+          _vehicle_year?: number | null;
+          _vehicle_fuel?: string | null;
+          _vehicle_engine?: string | null;
         };
         Returns: string;
+      };
+      get_active_promotions: {
+        Args: Record<string, never>;
+        Returns: ActivePromotionRow[];
+      };
+      promotion_diagnostics: {
+        Args: Record<string, never>;
+        Returns: PromotionDiagnosticRow[];
+      };
+      get_public_partners: {
+        Args: Record<string, never>;
+        Returns: PublicPartnerRow[];
       };
       create_trade_enquiry: {
         Args: {

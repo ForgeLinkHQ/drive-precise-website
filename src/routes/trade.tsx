@@ -16,7 +16,7 @@ import { mailtoHref } from "@/lib/contact-links";
 export const Route = createFileRoute("/trade")({
   head: () =>
     pageMeta({
-      title: "Trade Vehicle Preparation — BMW Specialist | Drive Precise",
+      title: "Trade Vehicle Preparation: BMW Specialist | Drive Precise",
       description:
         "Mechanical preparation, part-exchange checks, PDI, de-modification and batch stock work for motor traders and dealerships. On your site, or collected.",
       path: "/trade",
@@ -33,7 +33,7 @@ const CAPABILITIES = [
   "Mechanical repairs",
   "De-modification and styling removal",
   "Vehicle collection and movement between sites",
-  "Batch preparation — several cars in one visit",
+  "Batch preparation, several cars in one visit",
   "Partner coordination for tyres, alignment, MOT and bodywork",
 ];
 
@@ -69,7 +69,7 @@ function TradePage() {
           tone="deep"
           eyebrow="Trade"
           title="Vehicle preparation without additional workshop overhead"
-          intro="Mechanical preparation, checks and de-modification for motor traders, dealerships and sales sites — at your site or collected. One technician, one point of contact, work that comes back right the first time."
+          intro="Mechanical preparation, checks and de-modification for motor traders, dealerships and sales sites, at your site or collected. One technician, one point of contact, work that comes back right the first time."
         />
 
         <div className="shell py-10 lg:py-14">
@@ -106,6 +106,13 @@ function TradePage() {
                   work. They aren't published here, and the retail prices elsewhere on this site
                   aren't what you'd pay. Tell us what your stock looks like and we'll put a real
                   proposal together.
+                </p>
+                {/* Trade buyers read every quote as ex-VAT unless told
+                    otherwise. Saying it here stops a rate being compared
+                    against a VAT-registered competitor on the wrong basis. */}
+                <p className="mt-3 text-muted-foreground">
+                  {BUSINESS.legalName} is not VAT registered, so nothing we quote has VAT added to
+                  it. The rate we agree is the rate you're invoiced.
                 </p>
               </div>
             </div>
@@ -148,15 +155,31 @@ function TradeForm() {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    // The length checks mirror what create_trade_enquiry enforces in Postgres.
+    // Without them the RPC raises, this form shows its generic failure, and the
+    // dealer who wrote a long description of their operation has no idea what
+    // to change. These are the highest-value enquiries on the site to lose.
     const nextErrors: Record<string, string> = {};
     if (!values.businessName.trim()) nextErrors.businessName = "Please give us your business name.";
+    else if (values.businessName.trim().length > 160)
+      nextErrors.businessName = "That's too long for our system. Please shorten it.";
+
     if (!values.contactName.trim())
       nextErrors.contactName = "Please tell us who we're speaking to.";
+    else if (values.contactName.trim().length > 120)
+      nextErrors.contactName = "That's too long for our system. Please shorten it.";
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
       nextErrors.email = "We need a working email address to send a proposal to.";
+    } else if (values.email.trim().length > 254) {
+      nextErrors.email = "That email address is too long. Please check it.";
     }
     if (values.phone.replace(/\D/g, "").length < 10) {
       nextErrors.phone = "Please give us a phone number we can reach you on.";
+    }
+    if (values.notes.trim().length > 4000) {
+      nextErrors.notes =
+        "That's a lot of detail, which we'd rather have than not. Please trim it to 4000 characters and send us the rest by email.";
     }
 
     setErrors(nextErrors);
@@ -194,7 +217,7 @@ function TradeForm() {
   if (reference) {
     return (
       <div className="rounded-lg border border-border bg-card p-6 shadow-card">
-        <h2 className="font-display text-2xl">Thanks — that's with us</h2>
+        <h2 className="font-display text-2xl">Thanks, that's with us</h2>
         <p className="mt-3 text-muted-foreground">
           Your reference is <strong className="font-mono text-foreground">{reference}</strong>.
           We'll come back to you to talk through volumes and what a working arrangement would look
@@ -385,7 +408,7 @@ function TradeForm() {
           </div>
         </fieldset>
 
-        <Field label="Typical stock" hint="Makes, ages, price bracket — whatever's useful.">
+        <Field label="Typical stock" hint="Makes, ages, price bracket, whatever's useful.">
           {(props) => (
             <Input
               {...props}
@@ -396,7 +419,7 @@ function TradeForm() {
           )}
         </Field>
 
-        <Field label="Anything else">
+        <Field label="Anything else" error={errors.notes}>
           {(props) => (
             <Textarea
               {...props}

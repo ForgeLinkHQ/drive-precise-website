@@ -45,7 +45,7 @@ export function LegalPage({
             role="note"
             className="rounded-lg border border-status-monitor/50 bg-status-monitor/8 p-5"
           >
-            <p className="font-medium">Draft — awaiting professional review</p>
+            <p className="font-medium">Draft, awaiting professional review</p>
             <p className="mt-2 text-sm leading-relaxed">
               This wording describes how {BUSINESS.legalName} actually works and is written to be
               accurate, but it has not been reviewed by a solicitor. It must be checked against UK

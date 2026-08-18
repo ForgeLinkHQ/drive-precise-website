@@ -30,7 +30,7 @@ import { getServiceById } from "@/lib/services";
 export const Route = createFileRoute("/")({
   head: () => {
     const meta = pageMeta({
-      title: "Mobile BMW Specialist in Surrey — Servicing, Repairs & Checks | Drive Precise",
+      title: "Mobile BMW Specialist in Surrey: Servicing, Repairs & Checks | Drive Precise",
       description:
         "Independent mobile BMW specialist covering Camberley, Woking, Guildford, Farnham and across Surrey. Servicing, brakes, suspension and repairs at your home or workplace. Build your quote online in two minutes.",
       path: "/",
@@ -132,7 +132,7 @@ function HomePage() {
               <h2 className="font-display text-3xl md:text-4xl">What we do</h2>
               <p className="mt-3 max-w-2xl text-muted-foreground">
                 Six areas of work. Each one lists exactly what's involved and what it's likely to
-                cost — no "call for pricing".
+                cost. No "call for pricing".
               </p>
             </div>
 
@@ -201,7 +201,7 @@ function HomePage() {
                 <div className="rule-accent pt-8">
                   <h2 className="font-display text-3xl md:text-4xl">Put together for you</h2>
                   <p className="mt-3 max-w-2xl text-muted-foreground">
-                    Combinations that cover a whole situation rather than a single part — and cost
+                    Combinations that cover a whole situation rather than a single part, and cost
                     less than booking the same work separately.
                   </p>
                 </div>
@@ -269,7 +269,7 @@ function HomePage() {
               <HowCard
                 icon={<Wrench className="size-6 text-accent" aria-hidden="true" />}
                 title="Workshop-supported"
-                body="Some work genuinely needs a ramp. We coordinate access to suitable facilities — and you still deal with one person throughout."
+                body="Some work genuinely needs a ramp. We coordinate access to suitable facilities, and you still deal with one person throughout."
               />
             </div>
 
@@ -293,8 +293,8 @@ function HomePage() {
                 <h2 className="font-display text-3xl md:text-4xl">Where we come to</h2>
                 <p className="mt-3 leading-relaxed text-muted-foreground">
                   Surrey and the north-east Hampshire border, with wider coverage where the job
-                  justifies the trip. If you're outside this, ask anyway — we'll give you a straight
-                  answer.
+                  justifies the trip. If you're outside this, ask anyway and we'll give you a
+                  straight answer.
                 </p>
                 <Button asChild variant="outline" className="mt-6">
                   <Link to="/service-areas">Check your postcode</Link>
@@ -334,7 +334,7 @@ function HomePage() {
                 <WhatsAppButton size="lg" label="Message us on WhatsApp" source="home-footer" />
               </div>
               <p className="muted-on-deep mt-6 text-sm">
-                Covering {HEADLINE_AREAS.join(", ")} and across Surrey. {BUSINESS.phone}
+                Covering {HEADLINE_AREAS.join(", ")} and across Surrey. {BUSINESS.phoneDisplay}
               </p>
             </div>
           </div>

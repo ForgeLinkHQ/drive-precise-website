@@ -54,7 +54,7 @@ export const PACKAGES: ServicePackage[] = [
     name: "BMW Service Plus",
     shortDescription: "A service, a proper look over the car, and a fresh-smelling cabin.",
     description:
-      "Our most-booked combination. The routine service your BMW is due, a full vehicle health check so you know where everything stands, and a cabin refresh — because the ventilation system is the one thing a service never touches and the one thing you notice every day.",
+      "Our most-booked combination. The routine service your BMW is due, a full vehicle health check so you know where everything stands, and a cabin refresh, because the ventilation system is the one thing a service never touches and the one thing you notice every day.",
     includes: ["minor-service", "vehicle-health-check", "ac-cabin-hygiene", "cabin-filter"],
     pricing: "from",
     priceGbp: 269,
@@ -101,7 +101,7 @@ export const PACKAGES: ServicePackage[] = [
     name: "Summer Ready",
     shortDescription: "Tyres, cooling, and air that doesn't smell.",
     description:
-      "A seasonal check focused on heat — tyres, coolant and cooling system, fluids, battery, brakes and wipers — with a cabin hygiene treatment so the air conditioning is pleasant to sit in.",
+      "A seasonal check focused on heat: tyres, coolant and cooling system, fluids, battery, brakes and wipers, with a cabin hygiene treatment so the air conditioning is pleasant to sit in.",
     includes: ["summer-health-check", "ac-cabin-hygiene", "tyre-pressure-check"],
     pricing: "from",
     priceGbp: 119,
@@ -116,7 +116,7 @@ export const PACKAGES: ServicePackage[] = [
     name: "Road Trip Ready",
     shortDescription: "Before you load the family in and set off.",
     description:
-      "A pre-journey check built around long drives with a full car — all the tyres including the spare, fluids, brakes, cooling, lights and a road test — plus fresh wipers and screenwash. Simple problems found here instead of on a motorway two hundred miles from home.",
+      "A pre-journey check built around long drives with a full car: all the tyres including the spare, fluids, brakes, cooling, lights and a road test, plus fresh wipers and screenwash. Simple problems found here instead of on a motorway two hundred miles from home.",
     includes: ["road-trip-check", "tyre-pressure-check", "screenwash-top-up", "wiper-blades"],
     pricing: "from",
     priceGbp: 125,
@@ -132,7 +132,7 @@ export const PACKAGES: ServicePackage[] = [
     name: "New-to-You BMW",
     shortDescription: "Just bought it? Start from a known position.",
     description:
-      "For a BMW you have recently bought. A full independent assessment, the service it is due, and fresh brake fluid — which is the single most commonly skipped item on a used car's history. You end up knowing exactly what you have, with a plan for what comes next.",
+      "For a BMW you have recently bought. A full independent assessment, the service it is due, and fresh brake fluid, which is the single most commonly skipped item on a used car's history. You end up knowing exactly what you have, with a plan for what comes next.",
     includes: ["new-to-you-check", "minor-service", "brake-fluid-service"],
     pricing: "from",
     priceGbp: 289,
@@ -147,7 +147,7 @@ export const PACKAGES: ServicePackage[] = [
     name: "First Car Safety Check",
     shortDescription: "For a son or daughter's first car.",
     description:
-      "Just bought your son or daughter's first car? We check the important mechanical basics — brakes, tyres, suspension, lights and fluids — and explain exactly where the vehicle stands, in plain English, to whoever is paying for it. No scare stories, and no work recommended that we cannot show you a reason for.",
+      "Just bought your son or daughter's first car? We check the important mechanical basics of brakes, tyres, suspension, lights and fluids, then explain exactly where the vehicle stands, in plain English, to whoever is paying for it. No scare stories, and no work recommended that we cannot show you a reason for.",
     includes: ["vehicle-health-check", "tyre-health-check", "brake-health-check"],
     pricing: "from",
     priceGbp: 115,
@@ -162,7 +162,7 @@ export const PACKAGES: ServicePackage[] = [
     name: "High-Mileage BMW Check",
     shortDescription: "For a car that has earned its keep.",
     description:
-      "A fuller review for an older or higher-mileage BMW: health check, brakes, suspension and steering, and battery condition. The point is a realistic maintenance plan — what to do now, what to budget for, and what is genuinely fine.",
+      "A fuller review for an older or higher-mileage BMW: health check, brakes, suspension and steering, and battery condition. The point is a realistic maintenance plan: what to do now, what to budget for, and what is genuinely fine.",
     includes: [
       "vehicle-health-check",
       "brake-health-check",

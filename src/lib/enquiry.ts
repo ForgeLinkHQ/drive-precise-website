@@ -18,6 +18,7 @@ import { basketTotals, resolveItems, type QuoteDraft, type ServiceLocation } fro
 import { currentAttribution, type ReferralSource } from "./attribution";
 import { SERVICES, type Service } from "./services";
 import { describeVehicle, normaliseRegistration, parseMileage } from "./vehicle";
+import { describeLookup, formatEngine } from "./vehicle-lookup";
 
 /** The lifecycle of an enquiry (§27). */
 export type EnquiryStatus =
@@ -86,6 +87,19 @@ export interface EnquirySnapshot {
   mileage: number | null;
   vehicleDescription: string;
   vehicleNotes: string;
+  /**
+   * What the register said, when a lookup found it (§21).
+   *
+   * Separate fields rather than a blob because this is what makes an enquiry
+   * quotable: knowing a car is a 2018 1995cc diesel is most of what deciding
+   * which parts it takes requires. `vehicleModel` is normally null, because
+   * DVLA does not return a model and nothing here will invent one.
+   */
+  vehicleMake: string | null;
+  vehicleModel: string | null;
+  vehicleYear: number | null;
+  vehicleFuel: string | null;
+  vehicleEngine: string | null;
 
   items: EnquiryLineItem[];
   indicativeTotalGbp: number;
@@ -118,17 +132,49 @@ export interface DraftValidation {
  * Precise needs to start the conversation — everything else is helpful, not
  * required.
  */
+/**
+ * The limits `create_enquiry` enforces in Postgres.
+ *
+ * Mirrored here on purpose. The RPC raises on anything outside these, which
+ * `submitEnquiry` can only catch and report as "we couldn't save your
+ * request" — a dead end offering the customer nothing to correct. Worse, it
+ * fires for exactly the wrong people: the ones who wrote a long, careful
+ * description of an awkward fault, or who built a large basket. Checking here
+ * turns a lost enquiry into a sentence next to the field.
+ *
+ * If a limit changes in the migration, change it here in the same commit.
+ */
+export const LIMITS = {
+  name: 120,
+  phone: 32,
+  email: 254,
+  registration: 16,
+  notes: 4000,
+  vehicleNotes: 4000,
+  items: 40,
+} as const;
+
 export function validateDraft(draft: QuoteDraft): DraftValidation {
   const errors: Record<string, string> = {};
 
   if (draft.items.length === 0) {
     errors.items = "Choose at least one service so we know what you'd like doing.";
+  } else if (draft.items.length > LIMITS.items) {
+    errors.items = `That's more than we can take in one request. Please send your first ${LIMITS.items} and we'll sort the rest out when we speak.`;
   }
-  if (!normaliseRegistration(draft.vehicle.registration)) {
+
+  const registration = normaliseRegistration(draft.vehicle.registration);
+  if (!registration) {
     errors.registration = "We need your registration to identify the right parts for your car.";
+  } else if (registration.length > LIMITS.registration) {
+    errors.registration = "That's longer than a registration can be. Please check it.";
   }
-  if (!draft.contact.name.trim()) {
+
+  const name = draft.contact.name.trim();
+  if (!name) {
     errors.name = "Please tell us your name.";
+  } else if (name.length > LIMITS.name) {
+    errors.name = "That name is too long for our system. Please shorten it.";
   }
 
   const phone = draft.contact.phone.replace(/[^0-9+]/g, "");
@@ -136,6 +182,8 @@ export function validateDraft(draft: QuoteDraft): DraftValidation {
     errors.phone = "Please give us a mobile number so we can confirm your quote.";
   } else if (phone.replace(/\D/g, "").length < 10) {
     errors.phone = "That number looks too short. Please check it.";
+  } else if (draft.contact.phone.trim().length > LIMITS.phone) {
+    errors.phone = "That number is too long. Please check it.";
   }
 
   const email = draft.contact.email.trim();
@@ -143,6 +191,15 @@ export function validateDraft(draft: QuoteDraft): DraftValidation {
   // but a typo in one that was supplied is worth catching.
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.email = "That email address doesn't look right. Please check it.";
+  } else if (email.length > LIMITS.email) {
+    errors.email = "That email address is too long. Please check it.";
+  }
+
+  if (draft.notes.trim().length > LIMITS.notes) {
+    errors.notes = `That's a lot of detail, which we'd rather have than not. Please trim it to ${LIMITS.notes} characters and tell us the rest on WhatsApp.`;
+  }
+  if (draft.vehicle.notes.trim().length > LIMITS.vehicleNotes) {
+    errors.vehicleNotes = `Please trim this to ${LIMITS.vehicleNotes} characters and tell us the rest on WhatsApp.`;
   }
 
   return { ok: Object.keys(errors).length === 0, errors };
@@ -187,6 +244,7 @@ export function buildSnapshot(
   const resolved = resolveItems(draft.items, services);
   const totals = basketTotals(resolved);
   const attribution = currentAttribution();
+  const lookup = draft.vehicle.lookup;
 
   return {
     reference: null,
@@ -198,12 +256,20 @@ export function buildSnapshot(
 
     registration: normaliseRegistration(draft.vehicle.registration),
     mileage: parseMileage(draft.vehicle.mileage),
-    // No lookup at launch, so there is nothing to describe beyond what the
-    // customer told us (§21). Never invented.
-    vehicleDescription: describeVehicle({
-      registration: normaliseRegistration(draft.vehicle.registration),
-    }),
+    // Whatever the register returned, and nothing more (§21). With no lookup
+    // this still falls back to "Model to confirm" rather than a guess.
+    vehicleDescription:
+      (lookup ? describeLookup(lookup) : null) ??
+      describeVehicle({ registration: normaliseRegistration(draft.vehicle.registration) }),
     vehicleNotes: draft.vehicle.notes.trim(),
+
+    vehicleMake: lookup?.make ?? null,
+    vehicleModel: lookup?.model ?? null,
+    vehicleYear: lookup?.yearOfManufacture ?? null,
+    vehicleFuel: lookup?.fuelType ?? null,
+    // Stored as the number a human recognises rather than raw cc, because it
+    // is read by a person deciding which parts to order.
+    vehicleEngine: lookup?.engineCapacityCc ? formatEngine(lookup.engineCapacityCc) : null,
 
     items: resolved.map((item) => ({
       kind: item.kind,
@@ -269,6 +335,14 @@ export async function submitEnquiry(snapshot: EnquirySnapshot): Promise<SubmitRe
       _customer_notes: snapshot.notes || null,
       _referral_source: snapshot.referralSource,
       _campaign: snapshot.campaign,
+      // Null unless a lookup found them. The columns have been waiting for a
+      // provider since the schema was written.
+      _vehicle_make: snapshot.vehicleMake,
+      _vehicle_model: snapshot.vehicleModel,
+      _vehicle_variant: null,
+      _vehicle_year: snapshot.vehicleYear,
+      _vehicle_fuel: snapshot.vehicleFuel,
+      _vehicle_engine: snapshot.vehicleEngine,
     });
 
     if (error || !data) {
@@ -276,7 +350,7 @@ export async function submitEnquiry(snapshot: EnquirySnapshot): Promise<SubmitRe
         ok: false,
         snapshot,
         message:
-          "We couldn't save your request just now. Your details are below — send them on WhatsApp and we'll pick it up from there.",
+          "We couldn't save your request just now. Your details are below. Send them on WhatsApp and we'll pick it up from there.",
       };
     }
 
@@ -286,7 +360,7 @@ export async function submitEnquiry(snapshot: EnquirySnapshot): Promise<SubmitRe
       ok: false,
       snapshot,
       message:
-        "We couldn't reach our system just now. Your details are below — send them on WhatsApp and we'll pick it up from there.",
+        "We couldn't reach our system just now. Your details are below. Send them on WhatsApp and we'll pick it up from there.",
     };
   }
 }

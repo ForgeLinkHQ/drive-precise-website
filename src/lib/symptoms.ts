@@ -103,7 +103,7 @@ export const SYMPTOM_OPTIONS: SymptomOption[] = [
   {
     id: "want-it-checked",
     label: "I want the car checked",
-    helper: "No particular problem — you'd just like to know.",
+    helper: "No particular problem. You'd just like to know.",
     target: { kind: "service", serviceId: "vehicle-health-check" },
   },
   {

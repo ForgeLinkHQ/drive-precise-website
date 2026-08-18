@@ -11,7 +11,7 @@ import { BUSINESS } from "@/lib/business";
 export const Route = createFileRoute("/admin")({
   head: () =>
     pageMeta({
-      title: "Admin — Drive Precise",
+      title: "Admin | Drive Precise",
       description: "Internal.",
       path: "/admin",
       noIndex: true,
@@ -23,6 +23,9 @@ const TABS = [
   { to: "/admin", label: "Overview", exact: true },
   { to: "/admin/enquiries", label: "Enquiries" },
   { to: "/admin/catalogue", label: "Catalogue" },
+  { to: "/admin/promotions", label: "Promotions" },
+  { to: "/admin/partners", label: "Partners" },
+  { to: "/admin/referrals", label: "Referrals" },
 ] as const;
 
 function AdminLayout() {

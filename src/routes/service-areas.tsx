@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/service-areas")({
   head: () =>
     pageMeta({
-      title: "Service Areas — Mobile BMW Specialist in Hampshire & Surrey | Drive Precise",
+      title: "Service Areas: Mobile BMW Specialist in Hampshire & Surrey | Drive Precise",
       description:
         "We cover Farnborough, Camberley, Aldershot, Fleet, Farnham, Guildford, Woking, Basingstoke, Bracknell and Reading. Check your postcode.",
       path: "/service-areas",
@@ -36,7 +36,7 @@ function ServiceAreasPage() {
         <PageHeader
           eyebrow="Service areas"
           title="Where we come to"
-          intro="Hampshire, Surrey and the Berkshire border. Beyond that it depends on the job — a full day's work is worth travelling for in a way that a half-hour one isn't, and we'll tell you honestly which yours is."
+          intro="Hampshire, Surrey and the Berkshire border. Beyond that it depends on the job. A full day's work is worth travelling for in a way that a half-hour one isn't, and we'll tell you honestly which yours is."
         />
 
         <div className="shell py-10 lg:py-14">
@@ -81,7 +81,7 @@ function ServiceAreasPage() {
               >
                 {result.status === "core" && (
                   <>
-                    <p className="font-medium">Yes — {result.area.name} is right in our area.</p>
+                    <p className="font-medium">Yes, {result.area.name} is right in our area.</p>
                     <p className="mt-2 text-sm text-muted-foreground">
                       No travel charge, and usually the quickest to get booked in.
                     </p>
@@ -92,7 +92,7 @@ function ServiceAreasPage() {
                     <p className="font-medium">Yes, we cover {result.area.name}.</p>
                     <p className="mt-2 text-sm text-muted-foreground">
                       Depending on the job there may be a travel charge. We'll tell you what it is
-                      with your quote — before you commit to anything.
+                      with your quote, before you commit to anything.
                     </p>
                   </>
                 )}
@@ -109,7 +109,7 @@ function ServiceAreasPage() {
                   <>
                     <p className="font-medium">We couldn't read that as a postcode.</p>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Try just the first part — the letters and the first number, like GU14.
+                      Try just the first part: the letters and the first number, like GU14.
                     </p>
                   </>
                 )}
@@ -172,9 +172,9 @@ function ServiceAreasPage() {
           <section className="mt-14 rounded-lg border border-border bg-secondary/50 p-6 lg:p-8">
             <h2 className="font-display text-xl font-semibold">Not near us but want the work?</h2>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Collection and return covers more ground than a mobile visit does — we can pick the
-              car up from further out, do the work, and bring it back. Ask and we'll tell you what
-              that would look like.
+              Collection and return covers more ground than a mobile visit does. We can pick the car
+              up from further out, do the work, and bring it back. Ask and we'll tell you what that
+              would look like.
             </p>
             <Button asChild variant="outline" className="mt-5">
               <Link to="/quote">Build a quote</Link>

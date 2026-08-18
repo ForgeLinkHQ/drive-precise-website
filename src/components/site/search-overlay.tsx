@@ -145,7 +145,7 @@ export function SearchOverlay({
             </>
           ) : results.length === 0 ? (
             <p className="px-3 py-6 text-sm text-muted-foreground">
-              Nothing matched that. Search only looks through what we list — if the car is doing
+              Nothing matched that. Search only looks through what we list. If the car is doing
               something odd, message us and describe it in your own words.
             </p>
           ) : (

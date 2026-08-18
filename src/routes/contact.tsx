@@ -13,7 +13,7 @@ import { mailtoHref, telHref } from "@/lib/contact-links";
 export const Route = createFileRoute("/contact")({
   head: () =>
     pageMeta({
-      title: "Contact Drive Precise — Mobile BMW Specialist",
+      title: "Contact Drive Precise | Mobile BMW Specialist",
       description:
         "Phone, WhatsApp or email. Covering Camberley, Woking, Guildford, Farnham, Farnborough and across Surrey.",
       path: "/contact",
@@ -29,7 +29,7 @@ function ContactPage() {
         <PageHeader
           eyebrow="Contact"
           title="Get hold of us"
-          intro="WhatsApp is usually fastest — you can send photos and a video of the noise, which is worth a great deal more than trying to describe it."
+          intro="WhatsApp is usually fastest. You can send photos and a video of the noise, which is worth a great deal more than trying to describe it."
         />
 
         <div className="shell py-10 lg:py-14">
@@ -52,7 +52,7 @@ function ContactPage() {
                 If we don't answer we're under a car. Leave a message and we'll ring back.
               </p>
               <Button asChild block variant="outline" className="mt-4">
-                <a href={telHref(BUSINESS.phone)}>{BUSINESS.phone}</a>
+                <a href={telHref(BUSINESS.phone)}>{BUSINESS.phoneDisplay}</a>
               </Button>
             </div>
 
@@ -60,7 +60,7 @@ function ContactPage() {
               <Mail className="size-6 text-accent" aria-hidden="true" />
               <h2 className="mt-4 font-display text-lg font-semibold">Email</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                For anything that needs a paper trail — invoices, trade arrangements, fleet work.
+                For anything that needs a paper trail: invoices, trade arrangements, fleet work.
               </p>
               <Button asChild block variant="outline" className="mt-4">
                 <a href={mailtoHref(BUSINESS.email)} className="break-all">
@@ -106,7 +106,7 @@ function ContactPage() {
                   can turn up. This paragraph exists specifically to prevent
                   that misunderstanding. */}
               <div className="mt-8 rounded-lg border border-border bg-secondary/50 p-5">
-                <h3 className="font-medium">We come to you — there's no reception to visit</h3>
+                <h3 className="font-medium">We come to you, and there's no reception to visit</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Drive Precise is a mobile operation. We don't have a customer-facing premises, so
                   everything is arranged in advance and we come to wherever the car is. Where a job
@@ -121,7 +121,7 @@ function ContactPage() {
               Know roughly what you need?
             </h2>
             <p className="mt-3 max-w-2xl text-primary-foreground/80">
-              Build a request instead — it takes a couple of minutes and means we can come back with
+              Build a request instead. It takes a couple of minutes and means we can come back with
               an actual price rather than a conversation about what you might want.
             </p>
             <Button asChild size="lg" variant="accent" className="mt-6">

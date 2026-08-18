@@ -6,7 +6,7 @@ import { pageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/legal/booking")({
   head: () =>
     pageMeta({
-      title: "Booking & Cancellation Policy — Drive Precise",
+      title: "Booking & Cancellation Policy | Drive Precise",
       description:
         "How a booking is made, how to change or cancel it, and what happens if we can't complete the work.",
       path: "/legal/booking",
@@ -28,8 +28,8 @@ function BookingPage() {
         you have accepted the quoted price.
       </p>
       <p>
-        We say this plainly because the opposite assumption causes real problems — nobody should
-        take a morning off work on the strength of a form submission.
+        We say this plainly because the opposite assumption causes real problems. Nobody should take
+        a morning off work on the strength of a form submission.
       </p>
 
       <h2>Changing or cancelling</h2>
@@ -39,7 +39,7 @@ function BookingPage() {
       </p>
       <p>
         Where we've ordered parts specifically for your vehicle, those may not be returnable. If you
-        cancel after we've ordered them, we may charge for the parts — we'll tell you before
+        cancel after we've ordered them, we may charge for the parts, and we'll tell you before
         ordering anything that falls into this category, so it can't come as a surprise.
       </p>
 
@@ -54,7 +54,7 @@ function BookingPage() {
       <p>
         Mobile work needs safe, level ground with enough space to work around the vehicle, and the
         permission of whoever controls the land. If we arrive and it isn't workable, we'll try to
-        find an alternative on the spot — a nearby car park, a different bay — or rearrange.
+        find an alternative on the spot, such as a nearby car park or a different bay, or rearrange.
       </p>
       <p>
         Where we've travelled to a location that was described to us as suitable and clearly isn't,

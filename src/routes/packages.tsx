@@ -15,7 +15,7 @@ import { FROM_PRICE_CAVEAT, formatGbp, type Service } from "@/lib/services";
 export const Route = createFileRoute("/packages")({
   head: () =>
     pageMeta({
-      title: "BMW Service Packages — Drive Precise",
+      title: "BMW Service Packages | Drive Precise",
       description:
         "Service Plus, Cabin Refresh, Winter Ready, Road Trip Ready, New-to-You BMW and First Car Safety Check. Combinations that cost less than booking the same work separately.",
       path: "/packages",
@@ -34,7 +34,7 @@ function PackagesPage() {
         <PageHeader
           eyebrow="Packages"
           title="Put together for a whole situation"
-          intro="Rather than a single part. Each of these covers a scenario — a long trip, a cold winter, a car you've just bought — and costs less than booking the same work separately."
+          intro="Rather than a single part. Each of these covers a scenario: a long trip, a cold winter, a car you've just bought. All of them cost less than booking the same work separately."
         />
 
         <div className="shell py-10 lg:py-14">
@@ -115,7 +115,7 @@ function PackageCard({ pkg, services }: { pkg: ServicePackage; services: Service
           {saving !== null && saving > 0 && (
             <p className="mt-1 text-sm text-muted-foreground">
               Booked separately these come to {formatGbp(individualTotal ?? 0)}
-              {pkg.pricing === "from" ? " — around " : " — "}
+              {pkg.pricing === "from" ? ", around " : ", "}
               <span className="font-medium text-foreground">{formatGbp(saving)} less</span> as a
               package.
             </p>

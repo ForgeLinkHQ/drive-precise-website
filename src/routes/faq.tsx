@@ -10,7 +10,7 @@ import { BUSINESS } from "@/lib/business";
 export const Route = createFileRoute("/faq")({
   head: () => {
     const meta = pageMeta({
-      title: "Questions & Answers — Drive Precise",
+      title: "Questions & Answers | Drive Precise",
       description:
         "Do you come to my home? What if the job needs a ramp? Why does it say 'from'? Can I supply my own parts? Straight answers to what people actually ask.",
       path: "/faq",
@@ -63,7 +63,7 @@ const FAQS = [
   },
   {
     q: "Do you only work on BMWs?",
-    a: "BMW is our specialism and it's what we're best at. We do take on other makes — plenty of households have a BMW and something else on the drive — so ask, and we'll tell you straight whether we're the right people for it.",
+    a: "BMW is our specialism and it's what we're best at. We do take on other makes, since plenty of households have a BMW and something else on the drive, so ask and we'll tell you straight whether we're the right people for it.",
   },
   {
     q: "Are your prices fixed?",
@@ -71,11 +71,11 @@ const FAQS = [
   },
   {
     q: 'Why does the site say "from"?',
-    a: "Because BMW parts prices vary enormously between models and specifications — the same job on two 3 Series can differ by a hundred pounds depending on the engine and trim. A 'from' price is the honest starting point. We confirm the exact figure for your vehicle before anything is booked, and you're free to walk away at that point.",
+    a: "Because BMW parts prices vary enormously between models and specifications. The same job on two 3 Series can differ by a hundred pounds depending on the engine and trim. A 'from' price is the honest starting point. We confirm the exact figure for your vehicle before anything is booked, and you're free to walk away at that point.",
   },
   {
     q: "Do I need to know exactly what's wrong?",
-    a: "No, and most people don't. Tell us what the car is doing — the noise, when it happens, what it feels like — and we'll work out the rest. There's a whole section on the homepage designed around exactly this.",
+    a: "No, and most people don't. Tell us what the car is doing: the noise, when it happens, what it feels like. We'll work out the rest. There's a whole section on the homepage designed around exactly this.",
   },
   {
     q: "Can you arrange tyres or alignment?",
@@ -87,11 +87,11 @@ const FAQS = [
   },
   {
     q: "Can you inspect a car before I buy it?",
-    a: "Yes — that's the Pre-Purchase Inspection. We look at it properly, road test it where the seller allows, and give you a written report. We'd rather tell you to walk away from a car than watch you buy a bad one.",
+    a: "Yes, that's the Pre-Purchase Inspection. We look at it properly, road test it where the seller allows, and give you a written report. We'd rather tell you to walk away from a car than watch you buy a bad one.",
   },
   {
     q: "Can I supply my own parts?",
-    a: "For a lot of work, yes — especially modifications, where most people have already bought the part. There are jobs where we'd rather supply the parts ourselves so we can stand behind the whole thing, and we'll say so when that applies. Customer-supplied parts are fitted at your risk as far as the part itself goes; our labour is our responsibility either way.",
+    a: "For a lot of work, yes, especially modifications, where most people have already bought the part. There are jobs where we'd rather supply the parts ourselves so we can stand behind the whole thing, and we'll say so when that applies. Customer-supplied parts are fitted at your risk as far as the part itself goes; our labour is our responsibility either way.",
   },
   {
     q: "Do you do diagnostics?",
@@ -103,11 +103,11 @@ const FAQS = [
   },
   {
     q: "How do I get my final quote?",
-    a: "Build a request on the site — it takes a couple of minutes — and we'll come back with a firm price for your car, usually on WhatsApp and usually the same day. You can also just message us and skip the form.",
+    a: "Build a request on the site. It takes a couple of minutes, and we'll come back with a firm price for your car, usually on WhatsApp and usually the same day. You can also just message us and skip the form.",
   },
   {
     q: "How does payment work?",
-    a: "You pay when the work is done, by bank transfer or card. There's no deposit for standard work. Where a job needs expensive parts ordered in specifically for your car, we may ask for those up front — we'll always say so before you commit.",
+    a: "You pay when the work is done, by bank transfer or card. There's no deposit for standard work. Where a job needs expensive parts ordered in specifically for your car, we may ask for those up front, and we'll always say so before you commit.",
   },
 ];
 

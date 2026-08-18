@@ -27,7 +27,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { SERVICES, getServiceById, type Service } from "./services";
 import { getPackageById, packageServices, type ServicePackage } from "./packages";
-import type { VehicleDetails } from "./vehicle";
+import { parseVehicle, type LookedUpVehicle } from "./vehicle-lookup";
 
 export type ServiceLocation = "home" | "workplace" | "collection" | "unsure";
 export type TimeWindow = "morning" | "afternoon" | "flexible";
@@ -40,7 +40,21 @@ export interface BasketItem {
 }
 
 export interface QuoteDraft {
-  vehicle: { registration: string; mileage: string; notes: string };
+  vehicle: {
+    registration: string;
+    mileage: string;
+    notes: string;
+    /**
+     * What the register said about this plate, when a lookup found it.
+     *
+     * Kept in the draft rather than in component state so it survives a
+     * reload: a customer who half-builds a quote on the train and finishes it
+     * that evening should not have their vehicle silently forgotten between
+     * the two, and the enquiry record is only worth anything if the details
+     * are still attached when they press send.
+     */
+    lookup: LookedUpVehicle | null;
+  };
   items: BasketItem[];
   location: { kind: ServiceLocation | null; postcode: string };
   timing: { preferredDate: string; window: TimeWindow | null };
@@ -49,7 +63,7 @@ export interface QuoteDraft {
 }
 
 export const EMPTY_DRAFT: QuoteDraft = {
-  vehicle: { registration: "", mileage: "", notes: "" },
+  vehicle: { registration: "", mileage: "", notes: "", lookup: null },
   items: [],
   location: { kind: null, postcode: "" },
   timing: { preferredDate: "", window: null },
@@ -67,23 +81,86 @@ export const EMPTY_DRAFT: QuoteDraft = {
 
 const STORAGE_KEY = "dp.quote-draft.v1";
 
+const SERVICE_LOCATIONS: ServiceLocation[] = ["home", "workplace", "collection", "unsure"];
+const TIME_WINDOWS: TimeWindow[] = ["morning", "afternoon", "flexible"];
+
+/** A stored value only if it is genuinely a string. Anything else is absent. */
+function str(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+/** A stored value only if it is one of the values the union actually allows. */
+function oneOf<T extends string>(value: unknown, allowed: T[]): T | null {
+  return typeof value === "string" && (allowed as string[]).includes(value) ? (value as T) : null;
+}
+
+/**
+ * Coerce anything at all into a valid `QuoteDraft`.
+ *
+ * The stored draft is untrusted input. It survives for months, it predates
+ * fields added since, it can be edited by hand, and an older version of this
+ * site may have written enum values this one no longer knows. Every field is
+ * therefore checked rather than spread, because the previous version of this
+ * function trusted everything except `items` and that was a real crash: the
+ * rest of the app reads `QuoteDraft` as though TypeScript's guarantees hold at
+ * runtime, so it calls `registration.toUpperCase()` and
+ * `WINDOW_LABEL[window].toLowerCase()` directly. A draft holding a number, or
+ * a window value like "evening" from a future build, took out the whole quote
+ * page and lost the enquiry with it.
+ *
+ * Sanitising here rather than guarding at each use keeps that guarantee true in
+ * one place, which is the only place it can be enforced.
+ *
+ * Exported so the test suite can hand it the shapes real storage produces.
+ */
+export function sanitiseDraft(parsed: unknown): QuoteDraft {
+  const raw = (typeof parsed === "object" && parsed !== null ? parsed : {}) as Record<
+    string,
+    unknown
+  >;
+  const section = (key: string): Record<string, unknown> => {
+    const value = raw[key];
+    return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
+  };
+
+  const vehicle = section("vehicle");
+  const location = section("location");
+  const timing = section("timing");
+  const contact = section("contact");
+
+  return {
+    vehicle: {
+      registration: str(vehicle.registration),
+      mileage: str(vehicle.mileage),
+      notes: str(vehicle.notes),
+      // Through the same parser the network response goes through, for the
+      // same reason: a stored lookup is untrusted input too.
+      lookup: parseVehicle(vehicle.lookup),
+    },
+    items: Array.isArray(raw.items) ? raw.items.filter(isBasketItem) : [],
+    location: {
+      kind: oneOf(location.kind, SERVICE_LOCATIONS),
+      postcode: str(location.postcode),
+    },
+    timing: {
+      preferredDate: str(timing.preferredDate),
+      window: oneOf(timing.window, TIME_WINDOWS),
+    },
+    contact: {
+      name: str(contact.name),
+      phone: str(contact.phone),
+      email: str(contact.email),
+    },
+    notes: str(raw.notes),
+  };
+}
+
 function readStorage(): QuoteDraft | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<QuoteDraft>;
-    // Merge over the empty draft rather than trusting the stored shape: this
-    // value can be months old and predate fields added since.
-    return {
-      ...EMPTY_DRAFT,
-      ...parsed,
-      vehicle: { ...EMPTY_DRAFT.vehicle, ...parsed.vehicle },
-      location: { ...EMPTY_DRAFT.location, ...parsed.location },
-      timing: { ...EMPTY_DRAFT.timing, ...parsed.timing },
-      contact: { ...EMPTY_DRAFT.contact, ...parsed.contact },
-      items: Array.isArray(parsed.items) ? parsed.items.filter(isBasketItem) : [],
-    };
+    return sanitiseDraft(JSON.parse(raw));
   } catch {
     // Corrupt or unreadable storage must never break the page — a customer
     // with a broken draft should get an empty one, not an error boundary.
@@ -97,7 +174,11 @@ function isBasketItem(value: unknown): value is BasketItem {
   return (
     (item.kind === "service" || item.kind === "package") &&
     typeof item.id === "string" &&
-    item.id.length > 0
+    item.id.length > 0 &&
+    // A non-numeric `addedAt` sorts unpredictably wherever the basket is shown
+    // in the order it was built.
+    typeof item.addedAt === "number" &&
+    Number.isFinite(item.addedAt)
   );
 }
 

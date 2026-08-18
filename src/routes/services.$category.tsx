@@ -37,7 +37,7 @@ export const Route = createFileRoute("/services/$category")({
     const category = loaderData?.category;
     if (!category) return {};
     return pageMeta({
-      title: `${CATEGORY_LABEL[category]} — BMW specialists | Drive Precise`,
+      title: `${CATEGORY_LABEL[category]}: BMW specialists | Drive Precise`,
       description: CATEGORY_BLURB[category],
       path: `/services/${CATEGORY_SLUG[category]}`,
     });

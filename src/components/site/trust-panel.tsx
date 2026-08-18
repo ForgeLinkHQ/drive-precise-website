@@ -33,7 +33,7 @@ const REASONS = [
   {
     icon: ClipboardCheck,
     title: "Findings come with measurements",
-    body: "Pad thickness in millimetres, tread depth, photos. Green, amber or red, with the reason attached — so you decide rather than being told.",
+    body: "Pad thickness in millimetres, tread depth, photos. Green, amber or red, with the reason attached, so you decide rather than being told.",
     to: "/checks" as const,
     linkLabel: "See how we report findings",
   },
@@ -53,7 +53,7 @@ export function TrustPanel() {
         </h2>
         <p className="mt-3 max-w-2xl text-muted-foreground">
           We're a small operation looking after families, their kids' first cars and the odd
-          enthusiast. That only works if you'd recommend us — so the whole thing is built around
+          enthusiast. That only works if you'd recommend us, so the whole thing is built around
           being worth recommending.
         </p>
       </div>

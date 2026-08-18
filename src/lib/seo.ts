@@ -77,9 +77,25 @@ export function localBusinessJsonLd(areaNames: string[]) {
     url: BUSINESS.siteUrl,
     telephone: BUSINESS.phone,
     email: BUSINESS.email,
+    legalName: BUSINESS.legalName,
+    founder: { "@type": "Person", name: BUSINESS.director.name },
+    // Companies House number, in the property Schema.org defines for exactly
+    // this. `vatID` is deliberately absent: the company is not VAT registered,
+    // and an empty or invented one would be worse than none.
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "Companies House",
+      value: BUSINESS.companyNumber,
+    },
+    // Region only, never a street address: §55 is explicit that the operating
+    // address must not be presented as somewhere customers can turn up, and a
+    // full PostalAddress here is exactly what puts a pin on a map. Surrey
+    // rather than Hampshire because that is where the company is registered
+    // and where the business is based; Hampshire is territory it covers, which
+    // `areaServed` below says properly.
     address: {
       "@type": "PostalAddress",
-      addressRegion: "Hampshire",
+      addressRegion: "Surrey",
       addressCountry: "GB",
     },
     areaServed: areaNames.map((name) => ({ "@type": "City", name })),

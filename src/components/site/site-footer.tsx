@@ -51,6 +51,11 @@ export function SiteFooter() {
                   Packages
                 </Link>
               </li>
+              <li>
+                <Link to="/promotions" className="text-muted-foreground hover:text-accent">
+                  Seasonal offers
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -78,6 +83,11 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link to="/partners" className="text-muted-foreground hover:text-accent">
+                  Who we work with
+                </Link>
+              </li>
+              <li>
                 <Link to="/trade" className="text-muted-foreground hover:text-accent">
                   Trade enquiries
                 </Link>
@@ -98,7 +108,7 @@ export function SiteFooter() {
                   href={telHref(BUSINESS.phone)}
                   className="text-muted-foreground hover:text-accent"
                 >
-                  {BUSINESS.phone}
+                  {BUSINESS.phoneDisplay}
                 </a>
               </li>
               <li>
@@ -159,16 +169,31 @@ export function SiteFooter() {
           </p>
 
           <div className="mt-8 flex flex-col gap-4 border-t border-border pt-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            {/* The statutory disclosures. Registered name, company number,
+                place of registration and registered office are required to be
+                accessible on the site by the Trading Disclosures Regulations
+                2015 and the E-Commerce Regulations 2002, and this is where
+                they live. The registered office is never presented as an
+                address to visit (§55). */}
             <div>
               <p>
                 © {new Date().getFullYear()} {BUSINESS.legalName}
                 {BUSINESS.companyNumber &&
-                  ` · Registered in England and Wales, company number ${BUSINESS.companyNumber}`}
+                  ` · Registered in ${BUSINESS.placeOfRegistration}, company number ${BUSINESS.companyNumber}`}
               </p>
               {BUSINESS.registeredAddress && (
                 <p className="mt-1">Registered office: {BUSINESS.registeredAddress}</p>
               )}
-              {BUSINESS.vatNumber && <p className="mt-1">VAT registration {BUSINESS.vatNumber}</p>}
+              {BUSINESS.vatRegistered ? (
+                BUSINESS.vatNumber && <p className="mt-1">VAT registration {BUSINESS.vatNumber}</p>
+              ) : (
+                <p className="mt-1">
+                  Not VAT registered, so no VAT is added to any price on this site.
+                </p>
+              )}
+              <p className="mt-1">
+                {BUSINESS.director.name}, {BUSINESS.director.role}
+              </p>
             </div>
             <ul className="flex flex-wrap gap-x-5 gap-y-2">
               <li>

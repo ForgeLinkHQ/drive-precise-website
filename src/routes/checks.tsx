@@ -13,7 +13,7 @@ import { FROM_PRICE_CAVEAT, servicesInCategory } from "@/lib/services";
 export const Route = createFileRoute("/checks")({
   head: () =>
     pageMeta({
-      title: "BMW Checks & Inspections — Pothole, Pre-Purchase, Pre-MOT | Drive Precise",
+      title: "BMW Checks & Inspections: Pothole, Pre-Purchase, Pre-MOT | Drive Precise",
       description:
         "Independent BMW inspections: vehicle health checks, pothole impact checks, tyre and brake checks, pre-purchase inspections and pre-MOT checks. Written findings, no scare stories.",
       path: "/checks",
@@ -40,7 +40,7 @@ const FINDINGS = [
   {
     grade: "Red",
     heading: "Action recommended",
-    body: "Worth doing something about, and we show you why — the measurement, the photo, the reason. Never a recommendation you have to take on trust.",
+    body: "Worth doing something about, and we show you why: the measurement, the photo, the reason. Never a recommendation you have to take on trust.",
     className: "border-status-action/50 bg-status-action/8",
     dot: "bg-status-action",
   },
@@ -57,7 +57,7 @@ function ChecksPage() {
         <PageHeader
           eyebrow="Checks & Inspections"
           title="Find out where the car actually stands"
-          intro="Before you spend anything. Every check produces written findings marked green, amber or red — with the measurements behind them, so you can decide rather than be told."
+          intro="Before you spend anything. Every check produces written findings marked green, amber or red, with the measurements behind them, so you can decide rather than be told."
         />
 
         <section

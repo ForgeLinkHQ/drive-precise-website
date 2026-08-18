@@ -100,7 +100,7 @@ function AdminCatalogue() {
             {loading
               ? "Loading…"
               : rows.length === 0
-                ? "Nothing published — the site is serving the built-in catalogue."
+                ? "Nothing published. The site is serving the built-in catalogue."
                 : `${rows.length} services published. ${unconfirmed.length} prices still unconfirmed.`}
           </p>
         </div>
@@ -118,7 +118,7 @@ function AdminCatalogue() {
           <h2 className="font-display text-lg font-semibold">The built-in catalogue</h2>
           <p className="mt-3 text-muted-foreground">
             The site is currently serving the catalogue compiled into the app. It works, and
-            visitors see a complete price list — but nothing here can be edited until it's published
+            visitors see a complete price list, but nothing here can be edited until it's published
             to the database. Publishing copies every service and package across, after which this
             screen edits the live values and the site picks them up without a deploy.
           </p>
@@ -260,7 +260,7 @@ function CatalogueRow({ row, onSaved }: { row: ServiceRow; onSaved: () => void }
       </td>
       <td className="px-4 py-3">
         {pricing === "quote" ? (
-          <span className="text-muted-foreground">—</span>
+          <span className="text-muted-foreground">On quote</span>
         ) : (
           <Input
             value={price}

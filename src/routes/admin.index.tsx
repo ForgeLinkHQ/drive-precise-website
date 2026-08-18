@@ -155,10 +155,10 @@ function AdminOverview() {
                     <td className="px-4 py-3">
                       {row.avg_initial_basket_gbp
                         ? formatGbp(Number(row.avg_initial_basket_gbp))
-                        : "—"}
+                        : "Not yet"}
                     </td>
                     <td className="px-4 py-3">
-                      {row.avg_quoted_gbp ? formatGbp(Number(row.avg_quoted_gbp)) : "—"}
+                      {row.avg_quoted_gbp ? formatGbp(Number(row.avg_quoted_gbp)) : "Not yet"}
                     </td>
                   </tr>
                 ))}

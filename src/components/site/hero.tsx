@@ -90,7 +90,7 @@ export function Hero() {
               onClick={() => trackEvent("whatsapp_clicked", { meta: { source: "hero-call" } })}
             >
               <Phone className="size-4" aria-hidden="true" />
-              {BUSINESS.phone}
+              {BUSINESS.phoneDisplay}
             </a>
             <span className="muted-on-deep text-sm">
               Or just{" "}
@@ -109,7 +109,7 @@ export function Hero() {
             <h2 className="font-display text-xl font-semibold">Start with your registration</h2>
             <p className="muted-on-deep mt-2 text-sm leading-relaxed">
               It tells us which parts your car takes, which is the difference between a real price
-              and a guess. Nothing else needed yet — no name, no phone number.
+              and a guess. Nothing else needed yet: no name, no phone number.
             </p>
 
             <form
@@ -143,8 +143,8 @@ export function Hero() {
 
             <div className="mt-5 flex flex-col gap-3 border-t border-[var(--color-deep-rule)] pt-5">
               <p className="muted-on-deep text-sm">
-                Rather just ask a question? Send us a photo or a video of the noise — it beats
-                trying to describe it.
+                Rather just ask a question? Send us a photo or a video of the noise. It beats trying
+                to describe it.
               </p>
               <WhatsAppButton label="Message us on WhatsApp" block source="hero" />
             </div>

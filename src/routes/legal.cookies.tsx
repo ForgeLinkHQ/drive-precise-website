@@ -6,7 +6,7 @@ import { pageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/legal/cookies")({
   head: () =>
     pageMeta({
-      title: "Cookie Policy — Drive Precise",
+      title: "Cookie Policy | Drive Precise",
       description:
         "We use no advertising or tracking cookies. Here is exactly what this site stores on your device and why.",
       path: "/legal/cookies",
@@ -55,7 +55,7 @@ function CookiesPage() {
       <p>
         UK cookie rules require consent for storage that isn't strictly necessary to provide the
         service you asked for. Everything above is either strictly necessary or stored nowhere at
-        all, so there is nothing here to consent to — and offering a reject button that changed
+        all, so there is nothing here to consent to, and offering a reject button that changed
         nothing would be misleading rather than helpful.
       </p>
       <p>

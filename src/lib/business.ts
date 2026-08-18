@@ -1,34 +1,59 @@
 /**
  * Business configuration for Drive Precise Ltd.
  *
- * ---------------------------------------------------------------------------
- * THE DEFAULTS BELOW ARE PLACEHOLDERS AND MUST BE REPLACED BEFORE LAUNCH.
+ * The contact and company details below are the real ones. They are committed
+ * as defaults rather than left to the environment because they are public,
+ * stable, and legally required to appear on the site: a deploy that forgets an
+ * environment variable must not silently drop a statutory disclosure. The
+ * environment can still override any of them, so staging can point elsewhere
+ * without a code change.
  *
- * The phone numbers use Ofcom's reserved drama ranges (07700 900000–900999 and
- * 020 7946 0xxx). Those ranges are permanently unallocated, so a visitor who
- * taps "call" while this is unconfigured reaches nobody — rather than reaching
- * a stranger whose number we invented. `configurationIssues()` lists everything
- * still on a placeholder, and the admin dashboard renders that list, so the gap
- * is visible to whoever is running the site rather than buried in a file.
- * ---------------------------------------------------------------------------
- *
- * Values come from the environment where set, so the same build can run
- * against staging and production without a code change.
+ * `configurationIssues()` reports anything still missing and the admin
+ * dashboard renders that list, so a gap stays visible rather than buried in a
+ * file. Anything genuinely unknown uses Ofcom's reserved drama ranges rather
+ * than an invented number, so an unconfigured value reaches nobody instead of
+ * reaching a stranger.
  */
 
+/**
+ * An environment override, or undefined when there isn't a real one.
+ *
+ * A variable that is present but empty counts as absent. This matters more
+ * than it looks: `??` falls back only on null and undefined, so returning ""
+ * here would let a blank line in a `.env` file, or an environment variable
+ * added in Vercel and left empty, silently blank out a value that the defaults
+ * below are meant to guarantee. Several of those values are statutory
+ * disclosures, and losing one to a stray blank is not an acceptable failure
+ * mode. Whitespace-only is treated the same way.
+ */
 function env(key: string): string | undefined {
-  // import.meta.env for the client bundle, process.env for SSR — same pattern
-  // as the Supabase client.
-  const fromVite = (import.meta.env as Record<string, string | undefined>)[key];
+  // import.meta.env for the client bundle, process.env for SSR, the same
+  // pattern as the Supabase client.
+  const fromVite = (import.meta.env as Record<string, string | undefined>)[key]?.trim();
   if (fromVite) return fromVite;
-  if (typeof process !== "undefined" && process.env) return process.env[key];
+
+  if (typeof process !== "undefined" && process.env) {
+    const fromProcess = process.env[key]?.trim();
+    if (fromProcess) return fromProcess;
+  }
   return undefined;
 }
 
-/** Ofcom drama ranges — safe to display, impossible to reach a real person on. */
+/** Ofcom drama range. Safe to display, impossible to reach a real person on. */
 const PLACEHOLDER_MOBILE = "+447700900123";
-const PLACEHOLDER_LANDLINE = "+442079460123";
 const PLACEHOLDER_EMAIL = "hello@driveprecise.example";
+
+/**
+ * The mobile, in the two shapes it is needed in.
+ *
+ * `PHONE_E164` is what goes in a `tel:` link and in structured data, where the
+ * international form is the only unambiguous one. `PHONE_DISPLAY` is what a UK
+ * reader recognises as a phone number. They must stay the same number: the
+ * test suite asserts one is the other with the country code swapped for a
+ * leading zero, so a typo in either cannot ship.
+ */
+const PHONE_E164 = "+447466338404";
+const PHONE_DISPLAY = "07466 338404";
 
 export const BUSINESS = {
   /** Trading name used throughout the site. */
@@ -39,22 +64,60 @@ export const BUSINESS = {
   proposition: "BMW servicing, maintenance and repairs brought to you.",
   promise: "Car care without the guesswork.",
 
-  phone: env("VITE_BUSINESS_PHONE") ?? PLACEHOLDER_MOBILE,
+  /**
+   * The person behind the business.
+   *
+   * Naming the sole director is not itself a statutory requirement for a
+   * website, but §3 and §39 both point the same way: a one-person operation
+   * that says who that person is reads as accountable rather than anonymous.
+   * If a second director is ever appointed, name both or neither.
+   */
+  director: {
+    name: "Brandon M Stephen",
+    role: "Director and BMW Specialist",
+  },
+
+  /** International form, for `tel:` links and structured data. */
+  phone: env("VITE_BUSINESS_PHONE") ?? PHONE_E164,
+  /** National form, for anything a person reads. */
+  phoneDisplay: env("VITE_BUSINESS_PHONE_DISPLAY") ?? PHONE_DISPLAY,
   /** Digits only, international format, for wa.me links. */
-  whatsapp: (env("VITE_WHATSAPP_NUMBER") ?? PLACEHOLDER_MOBILE).replace(/[^0-9]/g, ""),
-  officePhone: env("VITE_BUSINESS_OFFICE_PHONE") ?? PLACEHOLDER_LANDLINE,
-  email: env("VITE_BUSINESS_EMAIL") ?? PLACEHOLDER_EMAIL,
-  tradeEmail: env("VITE_BUSINESS_TRADE_EMAIL") ?? PLACEHOLDER_EMAIL,
+  whatsapp: (env("VITE_WHATSAPP_NUMBER") ?? PHONE_E164).replace(/[^0-9]/g, ""),
+  email: env("VITE_BUSINESS_EMAIL") ?? "hello@driveprecise.co.uk",
+  /**
+   * Trade enquiries land in the same inbox. Advertising a `trade@` address that
+   * nobody has created would bounce the highest-value enquiries on the site.
+   */
+  tradeEmail: env("VITE_BUSINESS_TRADE_EMAIL") ?? "hello@driveprecise.co.uk",
 
   /**
-   * Companies House number and registered address.
+   * Statutory company disclosures.
+   *
+   * The Companies (Trading Disclosures) Regulations 2015 and the Electronic
+   * Commerce (EC Directive) Regulations 2002 together require the registered
+   * name, company number, place of registration and registered office address
+   * to be accessible on the website. The footer carries all four.
    *
    * A registered office is not a place customers may turn up to (§55), so it is
-   * rendered only in the footer's legal line — never as a "visit us" address,
-   * and never with a map.
+   * rendered only in the footer's legal line, never as a "visit us" address and
+   * never with a map.
    */
-  companyNumber: env("VITE_COMPANY_NUMBER") ?? "",
-  registeredAddress: env("VITE_REGISTERED_ADDRESS") ?? "",
+  companyNumber: env("VITE_COMPANY_NUMBER") ?? "15264715",
+  placeOfRegistration: "England and Wales",
+  registeredAddress:
+    env("VITE_REGISTERED_ADDRESS") ?? "26 Greenlands Road, Camberley, Surrey, GU15 2RT",
+
+  /**
+   * Drive Precise Ltd is not VAT registered.
+   *
+   * This is load-bearing rather than trivia. A business that is not registered
+   * must not charge VAT, must not show a VAT number, and must not quote prices
+   * "plus VAT". It also means every price on this site is the whole price,
+   * which is worth saying out loud: retail customers are used to garage quotes
+   * that grow by 20% at the counter, and trade customers assume ex-VAT unless
+   * told otherwise.
+   */
+  vatRegistered: false,
   vatNumber: env("VITE_VAT_NUMBER") ?? "",
 
   siteUrl: env("VITE_SITE_URL") ?? "https://www.driveprecise.co.uk",
@@ -191,19 +254,36 @@ export function checkCoverage(postcode: string): AreaCoverage {
 export function configurationIssues(): string[] {
   const issues: string[] = [];
   if (BUSINESS.phone === PLACEHOLDER_MOBILE) {
-    issues.push("Phone number is still the placeholder — set VITE_BUSINESS_PHONE.");
+    issues.push("Phone number is still the placeholder. Set VITE_BUSINESS_PHONE.");
   }
   if (BUSINESS.whatsapp === PLACEHOLDER_MOBILE.replace(/[^0-9]/g, "")) {
-    issues.push("WhatsApp number is still the placeholder — set VITE_WHATSAPP_NUMBER.");
+    issues.push("WhatsApp number is still the placeholder. Set VITE_WHATSAPP_NUMBER.");
   }
   if (BUSINESS.email === PLACEHOLDER_EMAIL) {
-    issues.push("Email address is still the placeholder — set VITE_BUSINESS_EMAIL.");
+    issues.push("Email address is still the placeholder. Set VITE_BUSINESS_EMAIL.");
   }
   if (!BUSINESS.companyNumber) {
-    issues.push("Companies House number is not set — required in the footer for a UK Ltd company.");
+    issues.push(
+      "Companies House number is not set. It is required in the footer for a UK Ltd company.",
+    );
   }
   if (!BUSINESS.registeredAddress) {
-    issues.push("Registered office address is not set — required on a UK Ltd company's website.");
+    issues.push(
+      "Registered office address is not set. It is legally required on a UK Ltd company's " +
+        "website, and it is the last outstanding disclosure. Set VITE_REGISTERED_ADDRESS to the " +
+        "address filed at Companies House.",
+    );
+  }
+  // Charging or displaying VAT while unregistered is an offence, so the two
+  // settings are checked against each other rather than trusted separately.
+  if (!BUSINESS.vatRegistered && BUSINESS.vatNumber) {
+    issues.push(
+      "A VAT number is set but the company is recorded as not VAT registered. Clear " +
+        "VITE_VAT_NUMBER, or update vatRegistered if the company has since registered.",
+    );
+  }
+  if (BUSINESS.vatRegistered && !BUSINESS.vatNumber) {
+    issues.push("The company is marked VAT registered but no VAT number is set.");
   }
   return issues;
 }

@@ -93,10 +93,32 @@ export function buildWhatsAppMessage(snapshot: EnquirySnapshot): string {
   lines.push("");
   lines.push("Please confirm the final vehicle-specific price and availability.");
 
-  const message = lines.join("\n");
-  return message.length > MAX_MESSAGE_LENGTH
-    ? `${message.slice(0, MAX_MESSAGE_LENGTH - 1)}…`
-    : message;
+  return truncate(lines.join("\n"), MAX_MESSAGE_LENGTH);
+}
+
+/**
+ * Shorten to a length without cutting a character in half.
+ *
+ * `slice` counts UTF-16 code units, so cutting at a fixed offset can land in
+ * the middle of a surrogate pair and leave a lone surrogate on the end. That is
+ * not merely ugly: `encodeURIComponent` throws a URIError on a lone surrogate,
+ * so the link builder below would fail outright. It would fail at the worst
+ * possible moment too, on the final "press Send" step, for a customer who had
+ * just done the work of building an entire request.
+ *
+ * Reachable in practice because nothing limits the length of the notes field
+ * and emoji are ordinary in a WhatsApp-shaped conversation. Dropping the
+ * trailing half-character is the whole fix.
+ */
+function truncate(text: string, limit: number): string {
+  if (text.length <= limit) return text;
+
+  let cut = limit - 1;
+  const code = text.charCodeAt(cut - 1);
+  // A high surrogate immediately before the cut has lost its partner.
+  if (code >= 0xd800 && code <= 0xdbff) cut -= 1;
+
+  return `${text.slice(0, cut)}…`;
 }
 
 /**

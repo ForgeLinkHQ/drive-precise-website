@@ -14,7 +14,7 @@ import { FROM_PRICE_CAVEAT, retailServices } from "@/lib/services";
 export const Route = createFileRoute("/return-to-standard")({
   head: () =>
     pageMeta({
-      title: "BMW Return to Standard — Modification Removal | Drive Precise",
+      title: "BMW Return to Standard: Modification Removal | Drive Precise",
       description:
         "Aftermarket intakes, downpipes, styling, dashcam wiring and ambient lighting removed and factory parts reinstated. For sellers, lease returns and motor traders.",
       path: "/return-to-standard",
@@ -30,7 +30,7 @@ const REASONS = [
   },
   {
     title: "Handing back a lease or PCP",
-    body: "Getting it back to factory spec before inspection avoids a charge you'd rather not have, and there's usually a deadline — tell us when and we'll work to it.",
+    body: "Getting it back to factory spec before inspection avoids a charge you'd rather not have, and there's usually a deadline, so tell us when and we'll work to it.",
   },
   {
     title: "Bought it already modified",
@@ -54,7 +54,7 @@ function ReturnToStandardPage() {
           tone="deep"
           eyebrow="Return to Standard"
           title="Putting it back exactly as it left the factory"
-          intro="Taking modifications off properly is a different skill from putting them on — knowing where the original brackets went, getting the trim back without broken clips, and leaving no trace that anything was ever there."
+          intro="Taking modifications off properly is a different skill from putting them on. It means knowing where the original brackets went, getting the trim back without broken clips, and leaving no trace that anything was ever there."
         />
 
         <div className="shell py-10 lg:py-14">
@@ -92,9 +92,9 @@ function ReturnToStandardPage() {
           <section className="mt-12 rounded-lg border border-border bg-secondary/50 p-6 lg:p-8">
             <h2 className="font-display text-2xl">Not sure what's been done to it?</h2>
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              Send us a few photos on WhatsApp — engine bay, underneath, the interior — and we'll
-              tell you what we can see, what's involved in undoing it and roughly what it will cost.
-              That costs you nothing.
+              Send us a few photos on WhatsApp of the engine bay, underneath and the interior, and
+              we'll tell you what we can see, what's involved in undoing it and roughly what it will
+              cost. That costs you nothing.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <WhatsAppButton

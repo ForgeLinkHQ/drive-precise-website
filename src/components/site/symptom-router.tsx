@@ -46,8 +46,8 @@ export function SymptomRouter() {
       </ul>
 
       <p className="mt-6 max-w-2xl text-sm text-muted-foreground">
-        This points you towards the right check — it isn't a diagnosis. What's actually wrong gets
-        worked out when someone looks at the car.
+        This points you towards the right check. It isn't a diagnosis, and what's actually wrong
+        gets worked out when someone looks at the car.
       </p>
     </section>
   );
