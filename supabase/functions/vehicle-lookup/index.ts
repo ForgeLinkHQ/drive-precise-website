@@ -26,6 +26,7 @@
  */
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { fetchPackage, isEnabled, mapImage, mapVehicleData } from "./ukvd.ts";
 
 const DVLA_ENDPOINT =
   Deno.env.get("DVLA_VES_ENDPOINT") ??
@@ -47,7 +48,14 @@ const CORS = {
 interface PublicVehicle {
   registration: string;
   make: string | null;
+  /** UKVD supplies this. Never inferred from engine capacity (§21). */
   model: string | null;
+  derivative: string | null;
+  engineCode: string | null;
+  gearbox: string | null;
+  bodyStyle: string | null;
+  firstRegisteredDate: string | null;
+  imageUrl: string | null;
   colour: string | null;
   fuelType: string | null;
   engineCapacityCc: number | null;
@@ -138,8 +146,15 @@ function fromVes(reg: string, body: Record<string, unknown>): PublicVehicle {
   return {
     registration: reg,
     make: textOrNull(body.make),
-    // VES has no model field. Left null rather than guessed (§21).
+    // VES has no model field. Left null rather than guessed (§21). This is
+    // the reason UKVD is the primary provider; VES remains the free fallback.
     model: null,
+    derivative: null,
+    engineCode: null,
+    gearbox: null,
+    bodyStyle: null,
+    firstRegisteredDate: null,
+    imageUrl: null,
     colour: textOrNull(body.colour),
     fuelType: textOrNull(body.fuelType),
     engineCapacityCc: intOrNull(body.engineCapacity),
@@ -157,12 +172,56 @@ function fromVes(reg: string, body: Record<string, unknown>): PublicVehicle {
   };
 }
 
+/**
+ * A UKVD VehicleData response, mapped into the same public shape.
+ *
+ * The point of sharing a shape with `fromVes` is that everything downstream —
+ * the cache, the front end, the enquiry record — is provider-agnostic. Which
+ * company answered is a detail carried in `source`, not a branch in the UI.
+ */
+function fromUkvd(reg: string, items: Record<string, unknown>, imageUrl: string | null): PublicVehicle {
+  const v = mapVehicleData(items);
+  return {
+    registration: reg,
+    make: v.make,
+    model: v.model,
+    derivative: v.derivative,
+    engineCode: v.engineCode,
+    gearbox: v.gearbox,
+    bodyStyle: v.bodyStyle,
+    firstRegisteredDate: v.firstRegisteredDate,
+    imageUrl,
+    colour: v.colour,
+    fuelType: v.fuelType,
+    engineCapacityCc: v.engineCapacityCc,
+    yearOfManufacture: v.yearOfManufacture,
+    // UKVD gives a full first-registration date; the month form is kept so the
+    // cached shape stays identical whichever provider answered.
+    monthOfFirstRegistration: v.firstRegisteredDate ? v.firstRegisteredDate.slice(0, 7) : null,
+    co2Emissions: v.co2Emissions,
+    euroStatus: v.euroStatus,
+    wheelplan: v.wheelplan,
+    taxStatus: v.taxStatus,
+    taxDueDate: v.taxDueDate,
+    motStatus: v.motStatus,
+    motExpiryDate: v.motExpiryDate,
+    markedForExport: v.markedForExport,
+    source: "ukvd",
+  };
+}
+
 /** A cached row, mapped back to the same public shape. */
 function fromCache(row: Record<string, unknown>): PublicVehicle {
   return {
     registration: String(row.registration),
     make: (row.make as string) ?? null,
     model: (row.model as string) ?? null,
+    derivative: (row.derivative as string) ?? null,
+    engineCode: (row.engine_code as string) ?? null,
+    gearbox: (row.gearbox as string) ?? null,
+    bodyStyle: (row.body_style as string) ?? null,
+    firstRegisteredDate: (row.first_registered_date as string) ?? null,
+    imageUrl: (row.image_url as string) ?? null,
     colour: (row.colour as string) ?? null,
     fuelType: (row.fuel_type as string) ?? null,
     engineCapacityCc: intOrNull(row.engine_capacity_cc),
@@ -178,6 +237,55 @@ function fromCache(row: Record<string, unknown>): PublicVehicle {
     markedForExport: typeof row.marked_for_export === "boolean" ? row.marked_for_export : null,
     source: String(row.source ?? "dvla-ves"),
   };
+}
+
+/**
+ * Remember an answer, best effort.
+ *
+ * Never awaited for its result and never allowed to throw: failing to cache a
+ * lookup is not a reason to withhold one that already succeeded. Shared by
+ * both providers so a UKVD result and a DVLA result are stored identically and
+ * read back through the same `fromCache`.
+ */
+async function cacheVehicle(
+  admin: ReturnType<typeof createClient> | null,
+  vehicle: PublicVehicle,
+): Promise<void> {
+  if (!admin) return;
+  try {
+    await admin.from("vehicle_lookups").upsert(
+      {
+        registration: vehicle.registration,
+        make: vehicle.make,
+        model: vehicle.model,
+        derivative: vehicle.derivative,
+        engine_code: vehicle.engineCode,
+        gearbox: vehicle.gearbox,
+        body_style: vehicle.bodyStyle,
+        first_registered_date: vehicle.firstRegisteredDate,
+        image_url: vehicle.imageUrl,
+        colour: vehicle.colour,
+        fuel_type: vehicle.fuelType,
+        engine_capacity_cc: vehicle.engineCapacityCc,
+        year_of_manufacture: vehicle.yearOfManufacture,
+        month_of_first_reg: vehicle.monthOfFirstRegistration,
+        co2_emissions: vehicle.co2Emissions,
+        euro_status: vehicle.euroStatus,
+        wheelplan: vehicle.wheelplan,
+        tax_status: vehicle.taxStatus,
+        tax_due_date: vehicle.taxDueDate,
+        mot_status: vehicle.motStatus,
+        mot_expiry_date: vehicle.motExpiryDate,
+        marked_for_export: vehicle.markedForExport,
+        source: vehicle.source,
+        fetched_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "registration" },
+    );
+  } catch {
+    // Nothing to do. The customer already has their answer.
+  }
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -225,12 +333,44 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (data) return json({ status: "found", vehicle: fromCache(data), cached: true }, 200);
   }
 
+  const ukvdKey = Deno.env.get("UKVD_API_KEY");
   const apiKey = Deno.env.get("DVLA_API_KEY");
-  if (!apiKey) {
+
+  if (!ukvdKey && !apiKey) {
     // Not an error. The site worked without a lookup before this existed and
     // still does; the front end treats this as "ask the customer instead".
     return json({ status: "not_configured" }, 200);
   }
+
+  // ── UKVD first ────────────────────────────────────────────────────────
+  //
+  // The primary provider, because it returns a model and DVLA does not. Each
+  // package is gated by `UKVD_PACKAGES`, since Drive Precise pays per package
+  // and calling one that is not on the plan is at best an error and at worst
+  // an invoice.
+  if (ukvdKey && isEnabled("VehicleData")) {
+    const result = await fetchPackage("VehicleData", registration, ukvdKey, TIMEOUT_MS);
+
+    if (result.notFound) return json({ status: "not_found" }, 200);
+
+    if (result.ok && result.items) {
+      // Optional and strictly decorative. A missing or unsubscribed image
+      // package must never cost the lookup that already succeeded.
+      let imageUrl: string | null = null;
+      if (isEnabled("VehicleImageData")) {
+        const image = await fetchPackage("VehicleImageData", registration, ukvdKey, TIMEOUT_MS);
+        if (image.ok && image.items) imageUrl = mapImage(image.items);
+      }
+
+      const found = fromUkvd(registration, result.items, imageUrl);
+      await cacheVehicle(admin, found);
+      return json({ status: "found", vehicle: found, cached: false }, 200);
+    }
+    // Anything else falls through to DVLA rather than failing outright: a
+    // free fallback that returns make and year beats returning nothing.
+  }
+
+  if (!apiKey) return json({ status: "unavailable" }, 503);
 
   let vehicle: PublicVehicle;
   try {
@@ -260,40 +400,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ status: "unavailable" }, 503);
   }
 
-  // Cache write is best effort. Failing to remember an answer is not a reason
-  // to withhold it.
-  if (admin) {
-    await admin
-      .from("vehicle_lookups")
-      .upsert(
-        {
-          registration: vehicle.registration,
-          make: vehicle.make,
-          model: vehicle.model,
-          colour: vehicle.colour,
-          fuel_type: vehicle.fuelType,
-          engine_capacity_cc: vehicle.engineCapacityCc,
-          year_of_manufacture: vehicle.yearOfManufacture,
-          month_of_first_reg: vehicle.monthOfFirstRegistration,
-          co2_emissions: vehicle.co2Emissions,
-          euro_status: vehicle.euroStatus,
-          wheelplan: vehicle.wheelplan,
-          tax_status: vehicle.taxStatus,
-          tax_due_date: vehicle.taxDueDate,
-          mot_status: vehicle.motStatus,
-          mot_expiry_date: vehicle.motExpiryDate,
-          marked_for_export: vehicle.markedForExport,
-          source: vehicle.source,
-          fetched_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "registration" },
-      )
-      .then(
-        () => undefined,
-        () => undefined,
-      );
-  }
-
+  await cacheVehicle(admin, vehicle);
   return json({ status: "found", vehicle, cached: false }, 200);
 });
+

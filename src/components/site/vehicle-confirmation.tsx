@@ -16,18 +16,17 @@ import { trackEvent } from "@/lib/analytics";
 /**
  * "Is this your car?", answered by the register (§21).
  *
- * The value of this is not the technology, it is the two seconds where a
- * customer sees their own car named back to them and relaxes. That is worth
- * getting right, and it is worth refusing to fake: everything shown here came
- * from DVLA, and the model — the one field customers most expect — is absent
- * because DVLA does not return it and guessing it from engine size would put
- * "320d" in front of someone driving a 318d.
+ * The value here is not the technology, it is the two seconds where a customer
+ * sees their own car named back to them and relaxes. Which is exactly why none
+ * of it may be faked: every field shown came from a provider that said it, and
+ * where the model is missing the page says so rather than deriving one from
+ * engine size and putting "320d" in front of someone driving a 318d (§21).
  *
- * Every failure is silent from the customer's point of view. If the lookup is
- * unconfigured, rate limited, slow or broken, this renders nothing at all and
- * the form behaves exactly as it did before the feature existed. Losing an
- * enquiry because a government API had a bad afternoon would be a far worse
- * outcome than not knowing the colour of someone's car.
+ * Every failure is silent from the customer's point of view. Unconfigured,
+ * rate limited, slow, or plain broken all render nothing at all, and the form
+ * behaves exactly as it did before this existed. Losing an enquiry because a
+ * data provider had a bad afternoon would be a far worse outcome than not
+ * knowing the colour of somebody's car.
  */
 
 /** Long enough that it isn't firing on every keystroke of a 7-character plate. */
@@ -115,22 +114,37 @@ export function VehicleConfirmation({
 
   return (
     <div className="rounded-lg border border-border bg-secondary/40 p-4" aria-live="polite">
+      {/* A stock image of the model, not a photograph of this car, so it is
+          never captioned as though it were theirs. Decorative: it carries an
+          empty alt and is dropped entirely if it fails to load. */}
+      {vehicle.imageUrl && (
+        <img
+          src={vehicle.imageUrl}
+          alt=""
+          loading="lazy"
+          className="mb-3 h-28 w-full rounded-md object-contain"
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+          }}
+        />
+      )}
       <p className="flex items-start gap-2 text-sm">
         <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
         <span>
           <span className="font-medium">{described}</span>
           <span className="block text-muted-foreground">
-            From the DVLA record for this registration.
+            From the vehicle record for this registration.
           </span>
         </span>
       </p>
 
-      {/* The model is the one thing customers expect and the one thing the
-          register does not carry. Saying so is better than a blank. */}
+      {/* Only when the provider genuinely didn't carry a model. UKVD does;
+          the DVLA fallback does not, and inferring one from engine size would
+          put the wrong car in front of someone who knows their own (§21). */}
       {!vehicle.model && (
         <p className="mt-3 text-sm text-muted-foreground">
-          DVLA doesn't publish the model, so tell us below if it's a 320d, a 118i or something else.
-          It helps us get the parts right first time.
+          The record doesn't include the model, so tell us below if it's a 320d, a 118i or something
+          else. It helps us get the parts right first time.
         </p>
       )}
 

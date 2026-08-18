@@ -201,8 +201,29 @@ export type PartnerRow = {
   commission_value: number | string | null;
   is_active: boolean;
   internal_notes: string | null;
+  website: string | null;
+  public_summary: string | null;
+  /** Has this business agreed to be named publicly? Defaults false. */
+  is_publicly_listed: boolean;
   created_at: string;
   updated_at: string;
+};
+
+/**
+ * A partner as a browser may see one.
+ *
+ * Deliberately built by naming the five safe columns rather than by `Omit`ing
+ * the unsafe ones. An Omit silently re-exposes anything added to PartnerRow
+ * later; this cannot. `commission_value`, `trade_arrangement` and
+ * `internal_notes` are Drive Precise's negotiated position with each business
+ * and must never reach the client.
+ */
+export type PublicPartnerRow = {
+  business_name: string;
+  category: string;
+  location: string | null;
+  website: string | null;
+  public_summary: string | null;
 };
 
 export type PartnerReferralRow = {
@@ -357,6 +378,10 @@ export type Database = {
           _vehicle_engine?: string | null;
         };
         Returns: string;
+      };
+      get_public_partners: {
+        Args: Record<string, never>;
+        Returns: PublicPartnerRow[];
       };
       create_trade_enquiry: {
         Args: {

@@ -86,6 +86,7 @@ const PARTNER_CATEGORIES: PartnerCategory[] = [
   "glass",
   "adas",
   "detailing",
+  "performance",
 ];
 
 function onlyKnown<T extends string>(values: string[], allowed: T[]): T[] {

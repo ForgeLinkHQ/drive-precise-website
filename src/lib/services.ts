@@ -65,7 +65,17 @@ export type PartnerCategory =
   | "paint"
   | "glass"
   | "adas"
-  | "detailing";
+  | "detailing"
+  /**
+   * Performance parts and tuning supply.
+   *
+   * The odd one out, deliberately. Every other category is work Drive Precise
+   * sends away. This one is the other half of a job it already does: the
+   * modifications catalogue sells fitting for customer-supplied parts, and
+   * most of that work is people who have already bought the part somewhere.
+   * A supply partner closes that loop rather than opening a new one.
+   */
+  | "performance";
 
 /** Commercial data. Internal only — never projected to the browser (§60). */
 export interface ServiceInternals {

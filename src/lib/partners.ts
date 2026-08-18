@@ -25,6 +25,7 @@ export const PARTNER_LABEL: Record<PartnerCategory, string> = {
   glass: "Glass",
   adas: "ADAS calibration",
   detailing: "Detailing & valeting",
+  performance: "Performance parts",
 };
 
 /** The line shown to a customer when a basket implies partner work (§18). */
@@ -39,6 +40,8 @@ export const PARTNER_BLURB: Record<PartnerCategory, string> = {
   glass: "Chips and cracks can be dealt with through a glass specialist we work with.",
   adas: "Camera and sensor calibration is handled by a specialist we can arrange.",
   detailing: "Detailing and valeting can be arranged through a local partner.",
+  performance:
+    "Bought the parts already? We fit customer-supplied parts. If you haven't, we can point you at a supplier we work with.",
 };
 
 /** Referral lifecycle (§19). Mirrors the CHECK constraint on the table. */

@@ -67,6 +67,7 @@ const ROUTES = [
   "/return-to-standard",
   "/how-it-works",
   "/trade",
+  "/partners",
   "/about",
   "/contact",
   "/faq",

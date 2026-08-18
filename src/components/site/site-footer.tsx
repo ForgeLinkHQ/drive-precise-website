@@ -78,6 +78,11 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
+                <Link to="/partners" className="text-muted-foreground hover:text-accent">
+                  Who we work with
+                </Link>
+              </li>
+              <li>
                 <Link to="/trade" className="text-muted-foreground hover:text-accent">
                   Trade enquiries
                 </Link>

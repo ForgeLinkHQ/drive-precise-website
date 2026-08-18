@@ -41,6 +41,7 @@ const MOBILE_LINKS = [
   { to: "/packages", label: "Packages" },
   { to: "/how-it-works", label: "How It Works" },
   { to: "/service-areas", label: "Areas we cover" },
+  { to: "/partners", label: "Who we work with" },
   { to: "/trade", label: "Trade" },
   { to: "/about", label: "About" },
   { to: "/faq", label: "Questions" },

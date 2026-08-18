@@ -12,13 +12,17 @@ import {
 } from "@/lib/vehicle-lookup";
 
 /**
- * The lookup, tested against the shapes DVLA's Vehicle Enquiry Service
- * actually returns.
+ * The lookup's front-end half.
  *
- * The rule under test throughout is §21, "Never fabricate vehicle details".
- * The specific thing it forbids here is inventing a model: VES has no model
- * field, engine capacity plus fuel very nearly identifies one, and "very
- * nearly" applied to a customer's own car is worse than silence.
+ * UKVD is the primary provider and carries a real model; DVLA's Vehicle
+ * Enquiry Service is the free fallback and carries none. Both are normalised
+ * into one shape by the edge function, so what is tested here is the shape and
+ * the rules, not the provider.
+ *
+ * The rule throughout is §21, "Never fabricate vehicle details". The specific
+ * thing it forbids is inventing a model: engine capacity plus fuel very nearly
+ * identifies one, and "very nearly" applied to a customer's own car is worse
+ * than silence.
  */
 
 /** A real VES response body, as documented, for a 2018 BMW 320d. */
@@ -50,6 +54,12 @@ const FOUND = {
     registration: "AB18CDE",
     make: "BMW",
     model: null,
+    derivative: null,
+    engineCode: null,
+    gearbox: null,
+    bodyStyle: null,
+    firstRegisteredDate: null,
+    imageUrl: null,
     colour: "BLACK",
     fuelType: "DIESEL",
     engineCapacityCc: 1995,
@@ -122,7 +132,8 @@ describe("reading a lookup response", () => {
 
 describe("never fabricating a model (§21)", () => {
   it("carries no model from a DVLA response, because VES has none", () => {
-    // The whole point. VES returns make, not model.
+    // DVLA is the fallback provider. It returns make, not model, and nothing
+    // is allowed to derive one from engine capacity.
     expect(Object.keys(VES_RESPONSE)).not.toContain("model");
     const result = parseLookupResponse(FOUND);
     if (result.status !== "found") throw new Error("expected found");
@@ -142,9 +153,20 @@ describe("never fabricating a model (§21)", () => {
   });
 
   it("uses a model when a provider genuinely supplies one", () => {
-    // The field exists for a provider that carries it. It is never filled in
-    // by inference, only by something that actually knows.
+    // UKVD carries a real model, which is the reason it is the primary
+    // provider. It is still only ever printed when actually present.
     expect(describeLookup(vehicle({ model: "320d" }))).toContain("320d");
+  });
+
+  it("adds the derivative UKVD supplies, without repeating the model", () => {
+    expect(describeLookup(vehicle({ model: "320d", derivative: "M Sport" }))).toBe(
+      "2018 BMW 320d M Sport · 2.0L, Diesel, Black",
+    );
+    // A provider that returns the same string in both fields must not produce
+    // "320d 320d".
+    expect(describeLookup(vehicle({ model: "320d", derivative: "320d" }))).toBe(
+      "2018 BMW 320d · 2.0L, Diesel, Black",
+    );
   });
 
   it("degrades to whatever it has rather than inventing filler", () => {
@@ -164,6 +186,27 @@ describe("never fabricating a model (§21)", () => {
         }),
       ),
     ).toBeNull();
+  });
+});
+
+describe("the vehicle image is decorative and untrusted", () => {
+  it("keeps an https image", () => {
+    const parsed = parseVehicle({ registration: "AB18CDE", imageUrl: "https://cdn.example/a.jpg" });
+    expect(parsed?.imageUrl).toBe("https://cdn.example/a.jpg");
+  });
+
+  it("drops anything that is not https, since it lands in an img src", () => {
+    for (const value of [
+      "javascript:alert(1)",
+      "data:image/svg+xml,<svg onload=alert(1)>",
+      "http://insecure.example/a.jpg",
+      "not a url",
+      42,
+      null,
+    ]) {
+      const parsed = parseVehicle({ registration: "AB18CDE", imageUrl: value });
+      expect(parsed?.imageUrl).toBeNull();
+    }
   });
 });
 

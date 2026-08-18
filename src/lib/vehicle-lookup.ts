@@ -1,17 +1,18 @@
 /**
  * Vehicle lookup, front end half (§21).
  *
- * The rule this file exists to keep is "Never fabricate vehicle details". The
- * temptation it has to resist is specific and constant: customers describe
- * their car as a "320d", DVLA does not return a model, and engine capacity
- * plus fuel type gets you *almost* there. Almost is the problem. A 1995cc
- * diesel 3 Series is an 318d, a 320d or a 325d depending on tune, and showing
- * a customer the wrong one back is worse than showing them nothing: it tells
- * someone who knows their own car that this system is guessing.
+ * The rule this file exists to keep is "Never fabricate vehicle details", and
+ * the temptation it resists is specific: customers describe their car as a
+ * "320d", and engine capacity plus fuel gets you *almost* there. Almost is the
+ * problem. A 1995cc diesel 3 Series is a 318d, a 320d or a 325d depending on
+ * tune, and showing a customer the wrong one back is worse than showing them
+ * nothing — it tells someone who knows their own car that this is guesswork.
  *
- * So `describeLookup()` below prints make, year, fuel and engine size — every
- * one of which DVLA actually said — and stops. The gap where the model would
- * go is filled by the customer, in a field, if they want to fill it.
+ * UKVD is the primary provider precisely because it carries a real model, so
+ * the honest answer is usually available rather than merely withheld. DVLA
+ * remains configured as a free fallback and returns no model at all. Either
+ * way the rule is the same: `describeLookup()` prints what a provider actually
+ * said and stops. Where the model is missing, the customer fills it in.
  *
  * Nothing here can block an enquiry. Every failure mode resolves to "ask the
  * customer instead", because a quote request is what the business runs on and
@@ -25,8 +26,21 @@ import { normaliseRegistration, isPlausibleRegistration } from "./vehicle";
 export interface LookedUpVehicle {
   registration: string;
   make: string | null;
-  /** Null from DVLA, which has no model field. Never inferred (§21). */
+  /**
+   * Supplied by UKVD, null from DVLA, never inferred from engine capacity.
+   *
+   * A 1995cc diesel 3 Series is a 318d, a 320d or a 325d depending on tune.
+   * Guessing which would put the wrong car in front of someone who knows
+   * their own (§21).
+   */
   model: string | null;
+  derivative: string | null;
+  engineCode: string | null;
+  gearbox: string | null;
+  bodyStyle: string | null;
+  firstRegisteredDate: string | null;
+  /** Stock image for the model, not a photo of this car. Decorative. */
+  imageUrl: string | null;
   colour: string | null;
   fuelType: string | null;
   engineCapacityCc: number | null;
@@ -87,6 +101,12 @@ export function parseVehicle(input: unknown): LookedUpVehicle | null {
     registration: normaliseRegistration(registration),
     make: textOrNull(raw.make),
     model: textOrNull(raw.model),
+    derivative: textOrNull(raw.derivative),
+    engineCode: textOrNull(raw.engineCode),
+    gearbox: textOrNull(raw.gearbox),
+    bodyStyle: textOrNull(raw.bodyStyle),
+    firstRegisteredDate: textOrNull(raw.firstRegisteredDate),
+    imageUrl: safeImageUrl(raw.imageUrl),
     colour: textOrNull(raw.colour),
     fuelType: textOrNull(raw.fuelType),
     engineCapacityCc: intOrNull(raw.engineCapacityCc),
@@ -157,9 +177,9 @@ export async function lookupVehicle(registration: string): Promise<LookupResult>
 /**
  * The one-line description shown back to the customer.
  *
- * Only fields DVLA returned, in the order a person would say them. No model,
- * because there is none to have. Returns null when there is genuinely nothing
- * worth printing, so a caller renders nothing rather than an empty shell.
+ * Only fields a provider actually returned, in the order a person would say
+ * them. Returns null when there is genuinely nothing worth printing, so a
+ * caller renders nothing rather than an empty shell.
  */
 export function describeLookup(vehicle: LookedUpVehicle): string | null {
   const parts: string[] = [];
@@ -167,6 +187,10 @@ export function describeLookup(vehicle: LookedUpVehicle): string | null {
   if (vehicle.yearOfManufacture) parts.push(String(vehicle.yearOfManufacture));
   if (vehicle.make) parts.push(titleCase(vehicle.make));
   if (vehicle.model) parts.push(vehicle.model);
+  // "M Sport" and the like. Only ever printed when the provider said it.
+  if (vehicle.derivative && vehicle.derivative !== vehicle.model) {
+    parts.push(vehicle.derivative);
+  }
 
   const spec: string[] = [];
   if (vehicle.engineCapacityCc) spec.push(formatEngine(vehicle.engineCapacityCc));
@@ -180,6 +204,23 @@ export function describeLookup(vehicle: LookedUpVehicle): string | null {
   if (!tail) return head;
   if (!head) return tail;
   return `${head} · ${tail}`;
+}
+
+/**
+ * An image URL only if it is one, and only over https.
+ *
+ * The value crosses a network boundary and lands in an `img src`. Anything
+ * that is not a plain https URL is dropped rather than rendered.
+ */
+export function safeImageUrl(value: unknown): string | null {
+  const raw = textOrNull(value);
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 /** 1995 becomes "2.0L", which is how people describe their own engine. */
