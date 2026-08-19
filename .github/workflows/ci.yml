@@ -57,6 +57,38 @@ jobs:
       - name: Audit (non-blocking)
         run: npm audit --audit-level=high || true
 
+  # The other half of the test suite. Several of this site's rules live only in
+  # SQL — the promotion substantiation gate is a WHERE clause, the enquiry
+  # status rules are RAISE statements, and §60 is a column list on a definer
+  # function — and none of that is checked by reading the migration text.
+  #
+  # This applies every migration to a real PostgreSQL in order, then runs the
+  # assertions in supabase/tests against it. It caught a live disagreement
+  # between get_active_promotions() and promotion_diagnostics() the day it was
+  # written, which is the kind of bug that otherwise reaches an owner as "the
+  # console says this offer is live and the website disagrees".
+  sql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify the migrations and the rules they carry
+        run: bash scripts/verify-sql.sh
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
   # Catches the class of mistake unit tests cannot: a page that renders in a
   # test but throws in a real browser, a route that 404s, a nav link pointing at
   # nothing. Runs against the actual production build.
