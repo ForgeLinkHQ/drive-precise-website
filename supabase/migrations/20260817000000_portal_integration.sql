@@ -231,7 +231,11 @@ GRANT ALL ON public.preview_tokens TO service_role;
 
 CREATE OR REPLACE FUNCTION public.create_preview_token(p_actor UUID DEFAULT NULL)
 RETURNS TEXT
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+-- `extensions` is on the path because `gen_random_bytes` is pgcrypto, which
+-- Supabase installs there rather than into `public`. Pinned to `public` alone
+-- this raises "function gen_random_bytes(integer) does not exist" the first time
+-- anyone opens a preview. A schema named here that does not exist is ignored.
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $$
 DECLARE
   v_token TEXT := encode(gen_random_bytes(24), 'hex');
 BEGIN
