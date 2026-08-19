@@ -46,9 +46,10 @@ describe("Law 2: a core file is never edited in a client repository", () => {
 
   it.each(Object.keys(manifest.files))("%s matches canonical", (rel) => {
     const path = join(REPO, destinationOf(rel));
-    expect(existsSync(path), `${destinationOf(rel)} is missing. Run: node scripts/core-sync.mjs`).toBe(
-      true,
-    );
+    expect(
+      existsSync(path),
+      `${destinationOf(rel)} is missing. Run: node scripts/core-sync.mjs`,
+    ).toBe(true);
     const actual = sha256(readFileSync(path));
     expect(
       actual,

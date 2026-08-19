@@ -31,8 +31,8 @@ name, a strapline, a director, a service area, whether a slot is called an
 appointment or a job. Semantics differ per client and per trade and belong to
 **configuration or the database**, never to a TypeScript literal.
 
-The test for which one you are looking at: *would a different client on the same
-trade need this changed?* If no, it is function. If yes, it is semantics.
+The test for which one you are looking at: _would a different client on the same
+trade need this changed?_ If no, it is function. If yes, it is semantics.
 
 **Enforced by:** `core-drift.test.ts` fails a core file containing any string on
 the client-identity denylist.

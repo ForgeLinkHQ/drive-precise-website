@@ -29,7 +29,13 @@
 function env(key: string): string | undefined {
   // import.meta.env for the client bundle, process.env for SSR, the same
   // pattern as the Supabase client.
-  const fromVite = (import.meta.env as Record<string, string | undefined>)[key]?.trim();
+  //
+  // The guard matters outside Vite. `import.meta.env` is a Vite construct, and
+  // in a plain Node process it is undefined, so indexing it threw rather than
+  // falling through to process.env. That made this module unimportable from a
+  // build script, which is exactly where the brand assets are rendered from.
+  const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).env;
+  const fromVite = viteEnv?.[key]?.trim();
   if (fromVite) return fromVite;
 
   if (typeof process !== "undefined" && process.env) {
