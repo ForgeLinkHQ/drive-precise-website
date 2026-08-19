@@ -249,6 +249,36 @@ export type PromotionRow = {
  * when the promotion began, and the promotion does not run longer than that.
  * Anything it cannot prove simply is not in this set.
  */
+/**
+ * What a customer sees when they open their quote link.
+ *
+ * Deliberately narrow: no admin notes, no lost reason, no TechMan reference and
+ * no campaign. `get_quote_for_token` is callable by `anon`, so this shape is
+ * the contract keeping internal columns off a public page.
+ */
+export type QuoteForTokenRow = {
+  reference: string;
+  customer_name: string;
+  registration: string;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  items: Json;
+  quoted_total_gbp: number;
+  status: string;
+  accepted_at: string | null;
+  expires_at: string;
+  preferred_date: string | null;
+  service_location: string | null;
+  postcode: string | null;
+};
+
+export type AcceptQuoteResult = {
+  enquiry_id: string;
+  reference: string;
+  quoted_total_gbp: number;
+  accepted: boolean;
+};
+
 export type ActivePromotionRow = {
   id: string;
   service_id: string;
@@ -446,6 +476,20 @@ export type Database = {
       promotion_diagnostics: {
         Args: Record<string, never>;
         Returns: PromotionDiagnosticRow[];
+      };
+      /**
+       * The quote-acceptance pair, reachable by `anon` because the person
+       * reading a quote has no account and should not need one. The link is the
+       * authorisation, so these functions' column lists are the security
+       * boundary rather than any row-level policy.
+       */
+      get_quote_for_token: {
+        Args: { p_token: string };
+        Returns: QuoteForTokenRow | null;
+      };
+      accept_quote: {
+        Args: { p_token: string };
+        Returns: AcceptQuoteResult;
       };
       get_public_partners: {
         Args: Record<string, never>;

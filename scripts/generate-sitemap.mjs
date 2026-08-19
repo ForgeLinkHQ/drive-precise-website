@@ -13,7 +13,7 @@
  *   node scripts/generate-sitemap.mjs
  */
 
-import { readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { BUSINESS } from "../src/lib/business.ts";
@@ -27,8 +27,23 @@ const SITE = BUSINESS.siteUrl.replace(/\/$/, "");
 /** Prefixes a visitor may reach but a search engine has no business indexing. */
 const PRIVATE = ["admin"];
 
+/**
+ * A route that has already said it does not want indexing.
+ *
+ * The page declares `noIndex: true` in its own `pageMeta` call, which is what
+ * puts the robots meta tag on it — so asking the file is the same question the
+ * browser gets, answered from one place. Maintaining a second list here is
+ * exactly the rot this script exists to avoid: `/quote/accept` is reached by a
+ * one-off token link and was picked up as a public page the moment it was
+ * added, because it did not happen to start with "admin".
+ */
+function declaresNoIndex(file) {
+  return /noIndex:\s*true/.test(readFileSync(resolve(ROUTES_DIR, file), "utf8"));
+}
+
 const paths = readdirSync(ROUTES_DIR)
   .filter((f) => f.endsWith(".tsx") && !f.startsWith("__"))
+  .filter((f) => !declaresNoIndex(f))
   .map((f) => f.replace(/\.tsx$/, ""))
   .filter((r) => !r.includes("$")) // dynamic, resolved from the database
   .filter((r) => !PRIVATE.some((p) => r === p || r.startsWith(`${p}.`)))
