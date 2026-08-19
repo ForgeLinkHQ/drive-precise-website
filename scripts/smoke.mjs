@@ -14,10 +14,26 @@
  *   - any console error, including React's hydration warnings;
  *   - any uncaught page exception.
  *
- * Supabase is deliberately pointed at a hostname that does not resolve. That is
+ * Supabase is deliberately pointed at a hostname that cannot resolve. That is
  * the test, not a limitation: §23's promise that the catalogue, the builder and
  * every page work without the database has to be verified, not asserted. Failed
  * fetches to that host are the one thing filtered out of the console check.
+ *
+ * The hostname has to satisfy two things at once, and getting one of them wrong
+ * is why this suite passed locally and failed in CI for weeks.
+ *
+ * It has to be *unresolvable*, so the app's failure is instant and the smoke
+ * run is not measuring somebody's DNS. `placeholder.supabase.co` is a single
+ * label under a domain that serves wildcard DNS, so it is resolvable on a real
+ * network even though it resolves to nothing useful — the request leaves the
+ * machine and something waits on it. A second label puts it outside the
+ * wildcard, which matches one label only.
+ *
+ * And it has to be *allowed by the site's own CSP*, which now genuinely applies
+ * to the preview build. `connect-src` permits `https://*.supabase.co` and
+ * nothing else, so an `.invalid` host is blocked before the request is made and
+ * every page reports a CSP violation instead of a failed fetch. CSP host
+ * wildcards span any number of labels, which is what lets one name be both.
  *
  * Run: node scripts/smoke.mjs
  */
@@ -128,7 +144,7 @@ async function main() {
     detached: true,
     env: {
       ...process.env,
-      VITE_SUPABASE_URL: "https://placeholder.supabase.co",
+      VITE_SUPABASE_URL: "https://unreachable.smoke.supabase.co",
       VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_placeholder",
     },
   });

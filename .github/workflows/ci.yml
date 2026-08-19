@@ -48,7 +48,13 @@ jobs:
           # Placeholders. The build must not need real credentials: the
           # catalogue, the builder and every page render without Supabase, and
           # only submitting an enquiry needs it at runtime.
-          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          #
+          # Two labels under supabase.co, and both halves of that matter.
+          # Wildcard DNS matches one label, so `unreachable.smoke` falls outside
+          # it and cannot resolve — where a single-label name resolves on a real
+          # network and leaves the request hanging. CSP host wildcards do span
+          # multiple labels, so the site's own connect-src still permits it.
+          VITE_SUPABASE_URL: https://unreachable.smoke.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
 
       - name: Typecheck
@@ -133,13 +139,13 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_URL: https://unreachable.smoke.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
 
       - name: Smoke test every route
         run: node scripts/smoke.mjs
         env:
-          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_URL: https://unreachable.smoke.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
 
       - name: Upload screenshots
