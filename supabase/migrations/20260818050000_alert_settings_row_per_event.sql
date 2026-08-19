@@ -1,94 +1,18 @@
 -- Alert settings, one row per event — under the name the platform uses.
 --
--- This site modelled them as typed booleans on a single row —
--- `on_new_enquiry`, `on_quote_accepted`, `on_stale_enquiry`, `on_trade_enquiry`
--- — which is a perfectly good shape and the wrong one for a platform.
+-- This site modelled them as typed booleans on a single row: on_new_enquiry,
+-- on_trade_enquiry, on_quote_accepted, on_stale_enquiry. A perfectly good shape
+-- and the wrong one for a platform.
 --
--- The Portal's alert settings panel is shared by every trade, and it reads a
--- row per event: `event` and `enabled`. That is the shape the module claims,
--- and it is claimed for a reason worth stating — adding an event becomes an
--- INSERT rather than a migration, and a trade with eleven events and a trade
--- with four use the same table and the same page.
+-- The Portal's alert panel is shared by every trade and reads a row per event.
+-- Against typed columns it found nothing it recognised and rendered "alerts
+-- aren't set up on this site yet" — while they were set up and firing. The
+-- owner received alerts they could not switch off, on a page telling them they
+-- had none. That is worse than a visible error, because nothing looks broken.
 --
--- With the typed columns, the panel found no rows it recognised and rendered
--- "alerts aren't set up on this site yet" while the alerts were, in fact, set
--- up and firing. The owner could receive them and could not turn one off. That
--- is a worse failure than a visible error, because nothing looks broken.
---
--- Two things are preserved rather than dropped:
---
---   * `notify_email` stays exactly where it is. It is one address for the
---     business, not a per-event setting, and `resolve_owner_email()` reads it.
---   * Whatever the owner had already chosen. The typed columns are migrated
---     into rows before they are dropped, so an alert somebody switched off
---     stays off.
-
--- ── Where alerts go, moved out of the way ────────────────────────────────
---
--- `owner_alert_settings` has to become the per-event table, because that is
--- what the name means everywhere else on the platform and what the shared
--- console page reads. The recipient address is not a per-event setting and
--- needs somewhere of its own.
-CREATE TABLE IF NOT EXISTS public.owner_alert_recipient (
-  id           INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  -- Null falls back to the owner's login address, as it always did.
-  notify_email TEXT,
-  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.owner_alert_recipient ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON public.owner_alert_recipient FROM anon;
-GRANT ALL ON public.owner_alert_recipient TO service_role;
-
-DROP POLICY IF EXISTS "admin_manage_alert_recipient" ON public.owner_alert_recipient;
-CREATE POLICY "admin_manage_alert_recipient" ON public.owner_alert_recipient
-  FOR ALL TO authenticated
-  USING (public.has_admin_role()) WITH CHECK (public.has_admin_role());
-
-DROP TRIGGER IF EXISTS owner_alert_recipient_touch ON public.owner_alert_recipient;
-CREATE TRIGGER owner_alert_recipient_touch BEFORE UPDATE ON public.owner_alert_recipient
-  FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
-
-INSERT INTO public.owner_alert_recipient (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
-
--- ── Carry the old row across, then take the name ─────────────────────────
---
--- Both halves of the old table are preserved before it is dropped: the address
--- moves to the table above, the four booleans become rows below. Guarded on the
--- old shape still existing so this is safe on a database provisioned after it.
--- Created unconditionally and empty, so the INSERT further down works whether
--- or not there was an old table to read. `ON COMMIT DROP` would not survive:
--- the DO block below commits, and the table would be gone before it is used.
-CREATE TEMP TABLE _old_alert_prefs (event TEXT, enabled BOOLEAN);
-
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-     WHERE table_schema = 'public' AND table_name = 'owner_alert_settings'
-       AND column_name = 'notify_email'
-  ) THEN
-    EXECUTE $mig$
-      UPDATE public.owner_alert_recipient r
-         SET notify_email = s.notify_email
-        FROM public.owner_alert_settings s
-       WHERE r.id = 1 AND s.id = 1 AND s.notify_email IS NOT NULL
-    $mig$;
-
-    EXECUTE $mig$
-      INSERT INTO _old_alert_prefs (event, enabled)
-      SELECT 'new_enquiry',    COALESCE(on_new_enquiry, TRUE)    FROM public.owner_alert_settings
-      UNION ALL SELECT 'trade_enquiry',  COALESCE(on_trade_enquiry, TRUE)  FROM public.owner_alert_settings
-      UNION ALL SELECT 'quote_accepted', COALESCE(on_quote_accepted, TRUE) FROM public.owner_alert_settings
-      UNION ALL SELECT 'stale_enquiry',  COALESCE(on_stale_enquiry, TRUE)  FROM public.owner_alert_settings
-    $mig$;
-  END IF;
-END
-$$;
-
--- The triggers below are recreated against the new shape in the same
--- migration, so nothing reads this table between the drop and the create.
-DROP TABLE IF EXISTS public.owner_alert_settings;
+-- One row per event is also why the module claims that shape: adding an event
+-- becomes an INSERT rather than a migration, and a trade with eleven events and
+-- a trade with four use the same table and the same page.
 
 -- ── The new shape, under the platform's name ─────────────────────────────
 CREATE TABLE IF NOT EXISTS public.owner_alert_settings (
@@ -116,12 +40,22 @@ DROP TRIGGER IF EXISTS owner_alert_settings_touch ON public.owner_alert_settings
 CREATE TRIGGER owner_alert_settings_touch BEFORE UPDATE ON public.owner_alert_settings
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
--- The choices captured above, now that the table has the right shape.
+-- Whatever the owner had already chosen, read off the renamed table before its
+-- boolean columns are dropped below. An alert somebody switched off stays off.
 INSERT INTO public.owner_alert_settings (event, enabled)
-SELECT event, enabled FROM _old_alert_prefs
+SELECT 'new_enquiry',    COALESCE(on_new_enquiry, TRUE)    FROM public.owner_alert_recipient
+UNION ALL SELECT 'trade_enquiry',  COALESCE(on_trade_enquiry, TRUE)  FROM public.owner_alert_recipient
+UNION ALL SELECT 'quote_accepted', COALESCE(on_quote_accepted, TRUE) FROM public.owner_alert_recipient
+UNION ALL SELECT 'stale_enquiry',  COALESCE(on_stale_enquiry, TRUE)  FROM public.owner_alert_recipient
 ON CONFLICT (event) DO NOTHING;
 
-DROP TABLE _old_alert_prefs;
+-- Two sources of truth for one setting is how a toggle stops working with
+-- nobody able to say why.
+ALTER TABLE public.owner_alert_recipient
+  DROP COLUMN IF EXISTS on_new_enquiry,
+  DROP COLUMN IF EXISTS on_trade_enquiry,
+  DROP COLUMN IF EXISTS on_quote_accepted,
+  DROP COLUMN IF EXISTS on_stale_enquiry;
 
 -- Anything not carried over defaults to on. A business that has not thought
 -- about alerts should be told when work comes in, not silently not told.
@@ -241,11 +175,8 @@ $$;
 REVOKE ALL ON FUNCTION public.queue_stale_enquiry_alerts(INT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.queue_stale_enquiry_alerts(INT) TO service_role;
 
--- ── Names ─────────────────────────────────────────────────────────────────
 COMMENT ON TABLE public.owner_alert_settings IS
   'Which events raise an owner alert, one row each. The address lives in owner_alert_recipient.';
-COMMENT ON TABLE public.owner_alert_recipient IS
-  'Where owner alerts go. One row. Null notify_email falls back to the owner login address.';
 
 -- ── Two columns the shared console pages expect ───────────────────────────
 --

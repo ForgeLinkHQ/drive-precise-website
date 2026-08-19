@@ -67,6 +67,28 @@ jobs:
   # between get_active_promotions() and promotion_diagnostics() the day it was
   # written, which is the kind of bug that otherwise reaches an owner as "the
   # console says this offer is live and the website disagrees".
+  # Five edge functions now, one of which handles Stripe webhooks — and until
+  # this job existed none of them was linted, formatted or checked by anything.
+  # `deno check` would be better still, but it has to resolve the https imports
+  # and a job that fails when esm.sh is slow is a job people learn to ignore.
+  edge-functions:
+    name: Edge functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Lint edge functions
+        working-directory: supabase/functions
+        run: deno lint
+
+      - name: Check formatting
+        working-directory: supabase/functions
+        run: deno fmt --check
+
   sql:
     runs-on: ubuntu-latest
     services:

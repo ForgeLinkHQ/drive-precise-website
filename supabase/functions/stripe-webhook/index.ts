@@ -87,8 +87,9 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const intentId =
-          typeof session.payment_intent === "string" ? session.payment_intent : null;
+        const intentId = typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : null;
 
         // The row was written with the session id before the customer was sent
         // to Stripe; the intent id only exists now, so it is filled in here and
@@ -121,8 +122,9 @@ Deno.serve(async (req) => {
 
       case "charge.refunded": {
         const charge = event.data.object as Stripe.Charge;
-        const intentId =
-          typeof charge.payment_intent === "string" ? charge.payment_intent : null;
+        const intentId = typeof charge.payment_intent === "string"
+          ? charge.payment_intent
+          : null;
         if (intentId) {
           const { error } = await db.rpc("settle_payment", {
             p_payment_intent_id: intentId,

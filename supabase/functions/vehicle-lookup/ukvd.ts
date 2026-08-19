@@ -33,8 +33,8 @@ export type UkvdPackage =
   | "ValuationData"
   | "VdiCheckFull";
 
-const BASE =
-  Deno.env.get("UKVD_BASE_URL") ?? "https://uk1.ukvehicledata.co.uk/api/datapackage";
+const BASE = Deno.env.get("UKVD_BASE_URL") ??
+  "https://uk1.ukvehicledata.co.uk/api/datapackage";
 
 /**
  * Which packages this account actually pays for.
@@ -45,7 +45,9 @@ const BASE =
  */
 export function enabledPackages(): Set<UkvdPackage> {
   const raw = Deno.env.get("UKVD_PACKAGES")?.trim();
-  const names = raw ? raw.split(",").map((s) => s.trim()).filter(Boolean) : ["VehicleData"];
+  const names = raw
+    ? raw.split(",").map((s) => s.trim()).filter(Boolean)
+    : ["VehicleData"];
   return new Set(names as UkvdPackage[]);
 }
 
@@ -120,7 +122,9 @@ export async function fetchPackage(
 
     // UKVD reports a missing vehicle in the body with a 200, so the status
     // string is the only thing that distinguishes it from a real failure.
-    if (/notfound|no.?data|invalid.?vrm/i.test(status)) return { ok: false, notFound: true };
+    if (/notfound|no.?data|invalid.?vrm/i.test(status)) {
+      return { ok: false, notFound: true };
+    }
     if (!/success/i.test(status)) return { ok: false };
 
     return { ok: true, items: (envelope.DataItems ?? {}) as Record<string, unknown> };
@@ -180,12 +184,19 @@ export function mapVehicleData(items: Record<string, unknown>): MappedVehicle {
     colour: textOrNull(pick(reg, "Colour")),
     fuelType: textOrNull(pick(reg, "FuelType") ?? pick(smmt, "FuelType")),
     engineCapacityCc: intOrNull(
-      pick(reg, "EngineCapacity") ?? pick(tech, "EngineCapacity") ?? pick(engine, "EngineCapacity"),
+      pick(reg, "EngineCapacity") ?? pick(tech, "EngineCapacity") ??
+        pick(engine, "EngineCapacity"),
     ),
-    engineCode: textOrNull(pick(reg, "EngineNumber", "EngineCode") ?? pick(engine, "EngineCode")),
-    gearbox: textOrNull(pick(reg, "TransmissionType", "Transmission") ?? pick(smmt, "Transmission")),
+    engineCode: textOrNull(
+      pick(reg, "EngineNumber", "EngineCode") ?? pick(engine, "EngineCode"),
+    ),
+    gearbox: textOrNull(
+      pick(reg, "TransmissionType", "Transmission") ?? pick(smmt, "Transmission"),
+    ),
     yearOfManufacture: intOrNull(pick(reg, "YearOfManufacture")),
-    firstRegisteredDate: dateOrNull(pick(reg, "DateFirstRegistered", "DateFirstRegisteredUk")),
+    firstRegisteredDate: dateOrNull(
+      pick(reg, "DateFirstRegistered", "DateFirstRegisteredUk"),
+    ),
     co2Emissions: intOrNull(pick(reg, "Co2Emissions") ?? pick(tech, "Co2Emissions")),
     euroStatus: textOrNull(pick(reg, "EuroStatus")),
     wheelplan: textOrNull(pick(reg, "Wheelplan", "WheelPlan")),
@@ -194,16 +205,18 @@ export function mapVehicleData(items: Record<string, unknown>): MappedVehicle {
     taxDueDate: dateOrNull(pick(reg, "VehicleTaxDueDate", "TaxDueDate")),
     motStatus: textOrNull(pick(reg, "MotStatus", "VehicleMotStatus")),
     motExpiryDate: dateOrNull(pick(reg, "MotExpiryDate", "VehicleMotExpiryDate")),
-    markedForExport:
-      typeof pick(reg, "Exported", "MarkedForExport") === "boolean"
-        ? (pick(reg, "Exported", "MarkedForExport") as boolean)
-        : null,
+    markedForExport: typeof pick(reg, "Exported", "MarkedForExport") === "boolean"
+      ? (pick(reg, "Exported", "MarkedForExport") as boolean)
+      : null,
   };
 }
 
 /** A stock image URL for the vehicle, when the package is on the plan. */
 export function mapImage(items: Record<string, unknown>): string | null {
-  const image = (items.VehicleImages ?? items.VehicleImageDetails ?? {}) as Record<string, unknown>;
+  const image = (items.VehicleImages ?? items.VehicleImageDetails ?? {}) as Record<
+    string,
+    unknown
+  >;
   const list = image.ImageDetailsList;
   if (Array.isArray(list) && list.length > 0) {
     const first = list[0] as Record<string, unknown>;

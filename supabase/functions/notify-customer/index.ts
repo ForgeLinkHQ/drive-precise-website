@@ -36,8 +36,7 @@ import {
 } from "../_shared/email-template.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
-const FROM =
-  Deno.env.get("CUSTOMER_FROM") ?? "Drive Precise <hello@driveprecise.co.uk>";
+const FROM = Deno.env.get("CUSTOMER_FROM") ?? "Drive Precise <hello@driveprecise.co.uk>";
 
 type MessageKind =
   | "booking_confirmation"
@@ -124,7 +123,9 @@ function build(kind: MessageKind, d: Record<string, unknown>): Built | null {
               "If anything changes, reply to this email or call and we will move it. " +
                 "The earlier we know, the easier it is to give the slot to somebody else.",
             ) +
-            small("Drive Precise comes to you — please make sure there is safe access to the vehicle."),
+            small(
+              "Drive Precise comes to you — please make sure there is safe access to the vehicle.",
+            ),
         ),
       };
     }
@@ -137,7 +138,9 @@ function build(kind: MessageKind, d: Record<string, unknown>): Built | null {
           eyebrow("Tomorrow") +
             h1("A reminder about your booking") +
             p(hello) +
-            p(`Just a note that we are booked in for ${esc(str(d.service_name) ?? "your work")}.`) +
+            p(`Just a note that we are booked in for ${
+              esc(str(d.service_name) ?? "your work")
+            }.`) +
             facts([
               ["When", when],
               ["Where", str(d.postcode)],
@@ -158,13 +161,17 @@ function build(kind: MessageKind, d: Record<string, unknown>): Built | null {
           eyebrow("Your quote") +
             h1("Here's your quote") +
             p(hello) +
-            p(`Thanks for your enquiry about ${esc(vehicleText(d))}. Here is what the work comes to:`) +
+            p(`Thanks for your enquiry about ${
+              esc(vehicleText(d))
+            }. Here is what the work comes to:`) +
             facts([
               ["Vehicle", vehicleText(d)],
               ["Total", total ? `£${total}` : undefined],
               ["Reference", str(d.reference)],
             ]) +
-            (token ? btn("View and accept your quote", CUSTOMER_LINKS.quote(token)) : "") +
+            (token
+              ? btn("View and accept your quote", CUSTOMER_LINKS.quote(token))
+              : "") +
             hr() +
             p(
               "This price is for the work described and holds for 14 days. " +
@@ -185,7 +192,9 @@ function build(kind: MessageKind, d: Record<string, unknown>): Built | null {
             h1(`Your MOT is due${days !== undefined ? ` in ${days} days` : ""}`) +
             p(hello) +
             p(
-              `The MOT on ${esc(vehicleText(d))} expires${expiry ? ` on ${esc(expiry)}` : " shortly"}. ` +
+              `The MOT on ${esc(vehicleText(d))} expires${
+                expiry ? ` on ${esc(expiry)}` : " shortly"
+              }. ` +
                 "Driving without a valid one invalidates most insurance, so it is worth getting in the diary.",
             ) +
             facts([
@@ -276,7 +285,9 @@ serve(async (req) => {
     // Deliberately a success. A site running without an email provider
     // configured should not have its queue fill up with rows that retry
     // forever — the message is already marked sent, and the log is the record.
-    console.warn(`[notify-customer] RESEND_API_KEY unset; would have sent "${built.subject}" to ${to}`);
+    console.warn(
+      `[notify-customer] RESEND_API_KEY unset; would have sent "${built.subject}" to ${to}`,
+    );
     return jsonResponse({ skipped: "email provider not configured" }, 200);
   }
 
