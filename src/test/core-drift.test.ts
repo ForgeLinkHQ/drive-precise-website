@@ -24,6 +24,7 @@ const manifest = JSON.parse(readFileSync(MANIFEST, "utf8")) as {
   coreVersion: string;
   clientIdentityDenylist: string[];
   files: Record<string, string>;
+  requiredFiles?: Array<{ path: string; why?: string }>;
   duplication: Array<{ path: string; status?: string; owner?: string; note?: string }>;
 };
 
@@ -88,6 +89,20 @@ describe("Law 3: a divergence that is not fixed is at least owned", () => {
       expect(entry.note, "every known divergence needs a note saying what to do").toBeTruthy();
     },
   );
+});
+
+describe("the files every ForgeLink repository must carry", () => {
+  const required = manifest.requiredFiles ?? [];
+
+  it("has a required-file list", () => {
+    expect(required.length).toBeGreaterThan(0);
+  });
+
+  // Presence, not bytes. A README describing this client is required; a README
+  // identical to another client's would be a bug rather than compliance.
+  it.each(required.map((r) => [r.path, r] as const))("%s exists", (path, entry) => {
+    expect(existsSync(join(REPO, path)), entry.why ?? `${path} is required`).toBe(true);
+  });
 });
 
 describe("Law 7: every repository states the law", () => {

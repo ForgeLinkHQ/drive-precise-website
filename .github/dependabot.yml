@@ -1,0 +1,25 @@
+# Dependency updates, deliberately quiet.
+#
+# Weekly rather than daily, and grouped, because a client site with a handful of
+# open pull requests nobody reads is worse than one with none: it trains you to
+# ignore the tab where a real security advisory will eventually appear.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      production:
+        dependency-type: production
+        update-types: [minor, patch]
+      development:
+        dependency-type: development
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -1,8 +1,15 @@
 name: CI
 
+# Every branch, not just main and open pull requests.
+#
+# A commit pushed to a branch whose pull request has already merged matched
+# neither trigger, so it ran nothing and told nobody. Four branches across this
+# platform sat that way for up to five days, one of them carrying a security
+# fix. The concurrency rule below means the extra cost is one run per push
+# rather than one per commit.
 on:
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
   workflow_dispatch:
 
