@@ -37,3 +37,11 @@ export const OWNER_LINKS = {
   trade: portalLink("/trade"),
   dashboard: portalLink("/dashboard"),
 };
+
+/** The pages a customer message sends someone to. */
+export const CUSTOMER_LINKS = {
+  quote: (token: string) => siteLink(`/quote/accept?t=${encodeURIComponent(token)}`),
+  book: siteLink("/quote"),
+  contact: siteLink("/contact"),
+  checks: siteLink("/checks"),
+};

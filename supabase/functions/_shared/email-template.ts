@@ -111,3 +111,49 @@ export function ownerWrapper(inner: string): string {
   </table>
 </body></html>`;
 }
+
+/**
+ * The customer wrapper.
+ *
+ * Where the owner's version is deliberately plain — an operational note to
+ * somebody who already knows who we are — this one has to introduce itself. It
+ * carries the masthead, and it carries the two lines of small print that turn a
+ * marketing email into a service one: who is writing, and how to stop.
+ *
+ * `unsubscribeUrl` is optional because not every message has one. A booking
+ * confirmation and an MOT reminder are service messages about work this
+ * business is doing or has been asked about, and there is no opting out of
+ * being told your own appointment moved. Anything genuinely promotional passes
+ * a URL, and it is rendered where a person can find it.
+ */
+export function customerWrapper(inner: string, unsubscribeUrl?: string): string {
+  return `<!doctype html>
+<html><body style="margin:0;padding:0;background:${B.wash};">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:${B.wash};padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:${B.paper};border:1px solid ${B.border};border-radius:10px;overflow:hidden;">
+        <tr><td style="background:${B.blue};padding:18px 28px;">
+          <p style="margin:0;font-family:${FONT};font-size:17px;font-weight:700;letter-spacing:.02em;color:#FFFFFF;">
+            Drive Precise
+          </p>
+          <p style="margin:2px 0 0;font-family:${FONT};font-size:12px;color:${B.yellow};">
+            Mobile BMW specialist &middot; Hampshire &amp; Surrey
+          </p>
+        </td></tr>
+        <tr><td style="padding:28px 28px 8px;">${inner}</td></tr>
+        <tr><td style="padding:0 28px 24px;">
+          <div style="height:1px;background:${B.border};margin:8px 0 14px;"></div>
+          <p style="margin:0;font-family:${FONT};font-size:12px;line-height:1.6;color:${B.faint};">
+            Drive Precise Ltd. Independent specialist &mdash; not affiliated with BMW AG.
+            ${
+              unsubscribeUrl
+                ? `<br><a href="${esc(unsubscribeUrl)}" style="color:${B.faint};">Stop receiving these</a>.`
+                : ""
+            }
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
