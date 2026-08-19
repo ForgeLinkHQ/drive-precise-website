@@ -1,4 +1,4 @@
--- Alert settings, one row per event.
+-- Alert settings, one row per event — under the name the platform uses.
 --
 -- This site modelled them as typed booleans on a single row —
 -- `on_new_enquiry`, `on_quote_accepted`, `on_stale_enquiry`, `on_trade_enquiry`
@@ -23,8 +23,75 @@
 --     into rows before they are dropped, so an alert somebody switched off
 --     stays off.
 
--- ── The new shape ─────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.owner_alert_events (
+-- ── Where alerts go, moved out of the way ────────────────────────────────
+--
+-- `owner_alert_settings` has to become the per-event table, because that is
+-- what the name means everywhere else on the platform and what the shared
+-- console page reads. The recipient address is not a per-event setting and
+-- needs somewhere of its own.
+CREATE TABLE IF NOT EXISTS public.owner_alert_recipient (
+  id           INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  -- Null falls back to the owner's login address, as it always did.
+  notify_email TEXT,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.owner_alert_recipient ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.owner_alert_recipient FROM anon;
+GRANT ALL ON public.owner_alert_recipient TO service_role;
+
+DROP POLICY IF EXISTS "admin_manage_alert_recipient" ON public.owner_alert_recipient;
+CREATE POLICY "admin_manage_alert_recipient" ON public.owner_alert_recipient
+  FOR ALL TO authenticated
+  USING (public.has_admin_role()) WITH CHECK (public.has_admin_role());
+
+DROP TRIGGER IF EXISTS owner_alert_recipient_touch ON public.owner_alert_recipient;
+CREATE TRIGGER owner_alert_recipient_touch BEFORE UPDATE ON public.owner_alert_recipient
+  FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+INSERT INTO public.owner_alert_recipient (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- ── Carry the old row across, then take the name ─────────────────────────
+--
+-- Both halves of the old table are preserved before it is dropped: the address
+-- moves to the table above, the four booleans become rows below. Guarded on the
+-- old shape still existing so this is safe on a database provisioned after it.
+-- Created unconditionally and empty, so the INSERT further down works whether
+-- or not there was an old table to read. `ON COMMIT DROP` would not survive:
+-- the DO block below commits, and the table would be gone before it is used.
+CREATE TEMP TABLE _old_alert_prefs (event TEXT, enabled BOOLEAN);
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'owner_alert_settings'
+       AND column_name = 'notify_email'
+  ) THEN
+    EXECUTE $mig$
+      UPDATE public.owner_alert_recipient r
+         SET notify_email = s.notify_email
+        FROM public.owner_alert_settings s
+       WHERE r.id = 1 AND s.id = 1 AND s.notify_email IS NOT NULL
+    $mig$;
+
+    EXECUTE $mig$
+      INSERT INTO _old_alert_prefs (event, enabled)
+      SELECT 'new_enquiry',    COALESCE(on_new_enquiry, TRUE)    FROM public.owner_alert_settings
+      UNION ALL SELECT 'trade_enquiry',  COALESCE(on_trade_enquiry, TRUE)  FROM public.owner_alert_settings
+      UNION ALL SELECT 'quote_accepted', COALESCE(on_quote_accepted, TRUE) FROM public.owner_alert_settings
+      UNION ALL SELECT 'stale_enquiry',  COALESCE(on_stale_enquiry, TRUE)  FROM public.owner_alert_settings
+    $mig$;
+  END IF;
+END
+$$;
+
+-- The triggers below are recreated against the new shape in the same
+-- migration, so nothing reads this table between the drop and the create.
+DROP TABLE IF EXISTS public.owner_alert_settings;
+
+-- ── The new shape, under the platform's name ─────────────────────────────
+CREATE TABLE IF NOT EXISTS public.owner_alert_settings (
   event      TEXT PRIMARY KEY CHECK (event IN (
                'new_enquiry', 'trade_enquiry', 'quote_accepted', 'stale_enquiry',
                'booking', 'review'
@@ -33,52 +100,32 @@ CREATE TABLE IF NOT EXISTS public.owner_alert_events (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-ALTER TABLE public.owner_alert_events ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON public.owner_alert_events FROM anon;
-GRANT ALL ON public.owner_alert_events TO service_role;
+ALTER TABLE public.owner_alert_settings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.owner_alert_settings FROM anon;
+GRANT ALL ON public.owner_alert_settings TO service_role;
 
-DROP POLICY IF EXISTS "staff_read_alert_events" ON public.owner_alert_events;
-CREATE POLICY "staff_read_alert_events" ON public.owner_alert_events
+DROP POLICY IF EXISTS "staff_read_alert_settings" ON public.owner_alert_settings;
+CREATE POLICY "staff_read_alert_settings" ON public.owner_alert_settings
   FOR SELECT TO authenticated USING (public.has_staff_role());
-DROP POLICY IF EXISTS "admin_manage_alert_events" ON public.owner_alert_events;
-CREATE POLICY "admin_manage_alert_events" ON public.owner_alert_events
+DROP POLICY IF EXISTS "admin_manage_alert_settings" ON public.owner_alert_settings;
+CREATE POLICY "admin_manage_alert_settings" ON public.owner_alert_settings
   FOR ALL TO authenticated
   USING (public.has_admin_role()) WITH CHECK (public.has_admin_role());
 
-DROP TRIGGER IF EXISTS owner_alert_events_touch ON public.owner_alert_events;
-CREATE TRIGGER owner_alert_events_touch BEFORE UPDATE ON public.owner_alert_events
+DROP TRIGGER IF EXISTS owner_alert_settings_touch ON public.owner_alert_settings;
+CREATE TRIGGER owner_alert_settings_touch BEFORE UPDATE ON public.owner_alert_settings
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
--- ── Carry the existing choices across ─────────────────────────────────────
---
--- Guarded on the old columns still existing, so this migration is safe to run
--- against a database provisioned after they were dropped.
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-     WHERE table_schema = 'public'
-       AND table_name = 'owner_alert_settings'
-       AND column_name = 'on_new_enquiry'
-  ) THEN
-    EXECUTE $mig$
-      INSERT INTO public.owner_alert_events (event, enabled)
-      SELECT 'new_enquiry',    COALESCE(s.on_new_enquiry, TRUE)    FROM public.owner_alert_settings s
-      UNION ALL
-      SELECT 'trade_enquiry',  COALESCE(s.on_trade_enquiry, TRUE)  FROM public.owner_alert_settings s
-      UNION ALL
-      SELECT 'quote_accepted', COALESCE(s.on_quote_accepted, TRUE) FROM public.owner_alert_settings s
-      UNION ALL
-      SELECT 'stale_enquiry',  COALESCE(s.on_stale_enquiry, TRUE)  FROM public.owner_alert_settings s
-      ON CONFLICT (event) DO NOTHING
-    $mig$;
-  END IF;
-END
-$$;
+-- The choices captured above, now that the table has the right shape.
+INSERT INTO public.owner_alert_settings (event, enabled)
+SELECT event, enabled FROM _old_alert_prefs
+ON CONFLICT (event) DO NOTHING;
+
+DROP TABLE _old_alert_prefs;
 
 -- Anything not carried over defaults to on. A business that has not thought
 -- about alerts should be told when work comes in, not silently not told.
-INSERT INTO public.owner_alert_events (event, enabled)
+INSERT INTO public.owner_alert_settings (event, enabled)
 SELECT e, TRUE FROM unnest(ARRAY[
   'new_enquiry', 'trade_enquiry', 'quote_accepted', 'stale_enquiry', 'booking', 'review'
 ]) AS e
@@ -91,7 +138,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   -- Absent means on, which is the same default the typed columns had via
   -- COALESCE(..., TRUE). A missing row must never mean silence.
   SELECT COALESCE(
-    (SELECT enabled FROM public.owner_alert_events WHERE event = _event),
+    (SELECT enabled FROM public.owner_alert_settings WHERE event = _event),
     TRUE
   );
 $$;
@@ -194,18 +241,11 @@ $$;
 REVOKE ALL ON FUNCTION public.queue_stale_enquiry_alerts(INT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.queue_stale_enquiry_alerts(INT) TO service_role;
 
--- ── Retire the typed columns ──────────────────────────────────────────────
---
--- Dropped rather than left in place, because two sources of truth for the same
--- setting is how a toggle stops working with nobody able to say why.
-ALTER TABLE public.owner_alert_settings
-  DROP COLUMN IF EXISTS on_new_enquiry,
-  DROP COLUMN IF EXISTS on_trade_enquiry,
-  DROP COLUMN IF EXISTS on_quote_accepted,
-  DROP COLUMN IF EXISTS on_stale_enquiry;
-
+-- ── Names ─────────────────────────────────────────────────────────────────
 COMMENT ON TABLE public.owner_alert_settings IS
-  'Where owner alerts go. Which events fire lives in owner_alert_events, one row each.';
+  'Which events raise an owner alert, one row each. The address lives in owner_alert_recipient.';
+COMMENT ON TABLE public.owner_alert_recipient IS
+  'Where owner alerts go. One row. Null notify_email falls back to the owner login address.';
 
 -- ── Two columns the shared console pages expect ───────────────────────────
 --

@@ -10,21 +10,21 @@
 BEGIN;
 
 SELECT harness.eq(
-  (SELECT count(*)::int FROM public.owner_alert_events), 6,
+  (SELECT count(*)::int FROM public.owner_alert_settings), 6,
   'every event the site can raise has a row to switch'
 );
 SELECT harness.ok(
-  (SELECT bool_and(enabled) FROM public.owner_alert_events),
+  (SELECT bool_and(enabled) FROM public.owner_alert_settings),
   'and they start on — a business that has not thought about alerts should be told when work comes in'
 );
 
 -- ── A missing row means on, not off ───────────────────────────────────────
-DELETE FROM public.owner_alert_events WHERE event = 'new_enquiry';
+DELETE FROM public.owner_alert_settings WHERE event = 'new_enquiry';
 SELECT harness.ok(
   public.alert_enabled('new_enquiry'),
   'a deleted row still means on, because silence must never be the accident'
 );
-INSERT INTO public.owner_alert_events (event, enabled) VALUES ('new_enquiry', TRUE);
+INSERT INTO public.owner_alert_settings (event, enabled) VALUES ('new_enquiry', TRUE);
 
 -- ── Switching one off actually stops it ───────────────────────────────────
 INSERT INTO public.enquiries
@@ -36,7 +36,7 @@ SELECT harness.eq(
   'an enquiry queues an alert'
 );
 
-UPDATE public.owner_alert_events SET enabled = FALSE WHERE event = 'new_enquiry';
+UPDATE public.owner_alert_settings SET enabled = FALSE WHERE event = 'new_enquiry';
 INSERT INTO public.enquiries
   (customer_name, customer_phone, registration, items, status)
 VALUES ('Jo Blake', '07700900999', 'ZZ99YYY', '[]'::jsonb, 'new');
@@ -47,14 +47,14 @@ SELECT harness.eq(
 );
 
 -- ── The stale sweep reads the same switch ─────────────────────────────────
-UPDATE public.owner_alert_events SET enabled = FALSE WHERE event = 'stale_enquiry';
+UPDATE public.owner_alert_settings SET enabled = FALSE WHERE event = 'stale_enquiry';
 UPDATE public.enquiries SET created_at = now() - interval '3 days';
 SELECT harness.eq(
   public.queue_stale_enquiry_alerts(24), 0,
   'the stale sweep is switched off too, from the same place'
 );
 
-UPDATE public.owner_alert_events SET enabled = TRUE WHERE event = 'stale_enquiry';
+UPDATE public.owner_alert_settings SET enabled = TRUE WHERE event = 'stale_enquiry';
 SELECT harness.eq(
   public.queue_stale_enquiry_alerts(24), 2,
   'and switched back on it reports the neglected enquiries'
@@ -68,10 +68,10 @@ SELECT harness.eq(
 SELECT harness.ok(
   EXISTS (
     SELECT 1 FROM information_schema.columns
-     WHERE table_schema = 'public' AND table_name = 'owner_alert_settings'
+     WHERE table_schema = 'public' AND table_name = 'owner_alert_recipient'
        AND column_name = 'notify_email'
   ),
-  'notify_email stays where it was — one address for the business'
+  'the address has a table of its own — one recipient for the business, not a per-event setting'
 );
 SELECT harness.eq(
   (SELECT count(*)::int FROM information_schema.columns
@@ -79,6 +79,10 @@ SELECT harness.eq(
       AND column_name LIKE 'on\_%'),
   0,
   'and the typed columns are gone, so there is one source of truth'
+);
+SELECT harness.eq(
+  (SELECT count(*)::int FROM public.owner_alert_recipient), 1,
+  'exactly one recipient row, seeded'
 );
 
 -- ── The two columns the shared console pages need ─────────────────────────
