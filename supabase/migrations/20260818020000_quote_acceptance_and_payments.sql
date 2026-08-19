@@ -357,3 +357,74 @@ $$;
 
 REVOKE ALL ON FUNCTION public.get_admin_payments(INT) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_admin_payments(INT) TO authenticated, service_role;
+
+-- ============================================================
+-- 5. THE CONSOLE'S WAY INTO THE DIARY
+-- ============================================================
+--
+-- `reserve_slot` is on the Portal's absolute deny list, and correctly: it is
+-- the concurrency-sensitive path, it takes a hold, and it exists to be called
+-- by somebody standing in a checkout. The Portal's rule is that the safe
+-- wrapper is allowed instead, and this is that wrapper.
+--
+-- The difference is not ceremony. When the owner books a job from the console
+-- the customer is usually on the phone: there is no hold to place, no deposit
+-- link to wait for, and no reason to leave the slot in `pending_payment` until
+-- something times out. So this confirms immediately and says who did it.
+CREATE OR REPLACE FUNCTION public.book_enquiry(
+  p_enquiry_id UUID,
+  p_service_id TEXT,
+  p_starts_at  TIMESTAMPTZ,
+  p_agreed_price_gbp NUMERIC DEFAULT NULL,
+  p_notes      TEXT DEFAULT NULL
+) RETURNS JSONB
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_enquiry public.enquiries%ROWTYPE;
+  v_booking JSONB;
+BEGIN
+  SELECT * INTO v_enquiry FROM public.enquiries WHERE id = p_enquiry_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'unknown_enquiry' USING ERRCODE = 'P0001';
+  END IF;
+
+  -- A job needs a price somebody stands behind. The catalogue's number is
+  -- indicative by design (§20), so if nobody has quoted this and the caller has
+  -- not supplied a figure, there is nothing to book against.
+  IF COALESCE(p_agreed_price_gbp, v_enquiry.quoted_total_gbp) IS NULL THEN
+    RAISE EXCEPTION 'quote_required_for_status' USING ERRCODE = 'P0001';
+  END IF;
+
+  v_booking := public.reserve_slot(
+    p_service_id,
+    p_starts_at,
+    v_enquiry.customer_phone,
+    split_part(v_enquiry.customer_name, ' ', 1),
+    NULLIF(substr(v_enquiry.customer_name, length(split_part(v_enquiry.customer_name, ' ', 1)) + 2), ''),
+    v_enquiry.customer_email,
+    v_enquiry.postcode,
+    p_enquiry_id,
+    COALESCE(p_agreed_price_gbp, v_enquiry.quoted_total_gbp),
+    v_enquiry.service_location,
+    v_enquiry.registration,
+    'portal'
+  );
+
+  -- Booked by a person who has just spoken to the customer: confirmed, no hold.
+  UPDATE public.bookings
+     SET status = 'confirmed',
+         hold_expires_at = NULL,
+         notes = COALESCE(p_notes, notes)
+   WHERE id = (v_booking->>'id')::uuid
+  RETURNING to_jsonb(bookings.*) INTO v_booking;
+
+  UPDATE public.enquiries SET status = 'booked'
+   WHERE id = p_enquiry_id AND status <> 'completed';
+
+  RETURN v_booking;
+END $$;
+
+REVOKE ALL ON FUNCTION public.book_enquiry(UUID, TEXT, TIMESTAMPTZ, NUMERIC, TEXT)
+  FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.book_enquiry(UUID, TEXT, TIMESTAMPTZ, NUMERIC, TEXT)
+  TO authenticated, service_role;

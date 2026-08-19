@@ -176,6 +176,43 @@ SELECT harness.raises(
   'settling a payment nobody started is an error rather than a silent no-op'
 );
 
+-- ── The console's way in ──────────────────────────────────────────────────
+--
+-- `reserve_slot` is on the Portal's absolute deny list because it is the
+-- concurrency-sensitive path with hold semantics. `book_enquiry` is the safe
+-- wrapper: the customer is on the phone, so it confirms immediately.
+-- The slot reserved above, which is now confirmed and paid for.
+SELECT harness.raises(
+  $q$ SELECT public.book_enquiry(
+        (SELECT id FROM t_id), 't-service',
+        ((date_trunc('week', (now() AT TIME ZONE 'Europe/London'))
+          + interval '2 weeks' + interval '2 days')::date + time '09:00')
+          AT TIME ZONE 'Europe/London', 420.00) $q$,
+  'the console cannot book a slot that is already taken'
+);
+
+CREATE TEMP TABLE t_phone_job AS
+SELECT public.book_enquiry(
+  (SELECT id FROM t_id), 't-service',
+  ((date_trunc('week', (now() AT TIME ZONE 'Europe/London'))
+    + interval '3 weeks' + interval '3 days')::date + time '09:00')
+    AT TIME ZONE 'Europe/London',
+  420.00, 'Booked over the phone'
+) AS b;
+
+SELECT harness.eq(
+  (SELECT b->>'status' FROM t_phone_job), 'confirmed',
+  'a job booked from the console is confirmed, not held — nobody is waiting to pay'
+);
+SELECT harness.ok(
+  (SELECT (b->>'hold_expires_at') IS NULL FROM t_phone_job),
+  'and there is no hold to lapse'
+);
+SELECT harness.eq(
+  (SELECT (b->>'agreed_price_gbp')::numeric FROM t_phone_job), 420.00::numeric,
+  'the price the person agreed on the phone is the price recorded'
+);
+
 -- ── The console read carries no card data and no internal notes ───────────
 SELECT harness.eq(
   (SELECT count(*)::int FROM information_schema.columns
