@@ -14,7 +14,10 @@
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:all": "npm run build && npm run typecheck && npm run test:unit && npm run test:smoke",
-    "test:smoke": "node scripts/smoke.mjs"
+    "test:smoke": "node scripts/smoke.mjs",
+    "assets:brand": "node --experimental-strip-types scripts/render-brand-assets.mjs",
+    "assets:sitemap": "node --experimental-strip-types scripts/generate-sitemap.mjs",
+    "assets": "npm run assets:brand && npm run assets:sitemap"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

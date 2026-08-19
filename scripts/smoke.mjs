@@ -27,6 +27,8 @@ import { existsSync, mkdirSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 import { chromium } from "@playwright/test";
 
+import { chromiumPath } from "./lib/chromium.mjs";
+
 /**
  * Where to find Chromium.
  *
@@ -36,14 +38,6 @@ import { chromium } from "@playwright/test";
  * directly is correct there, and far better than downloading a second copy of
  * a browser that is already on disk.
  */
-function chromiumPath() {
-  const preinstalled = [
-    "/opt/pw-browsers/chromium/chrome-linux/chrome",
-    "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
-  ];
-  return preinstalled.find((path) => existsSync(path));
-}
-
 const PORT = Number(process.env.SMOKE_PORT ?? 4173);
 const BASE = `http://127.0.0.1:${PORT}`;
 const SHOTS = "smoke-screenshots";

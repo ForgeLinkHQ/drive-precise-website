@@ -10,6 +10,28 @@ customer identifies their car, builds a basket of work, sees indicative pricing 
 they go, and produces a structured enquiry that Drive Precise turns into a firm
 vehicle-specific quote over WhatsApp.
 
+## The Law
+
+**Read [FORGELINK_LAW.md](./FORGELINK_LAW.md) before writing code in this repo.**
+
+It is the platform constitution, byte-identical in every ForgeLink repository,
+and it is enforced by `src/test/core-drift.test.ts` rather than by memory.
+
+The short version:
+
+- **Function is shared, semantics are local.** If another client of the same
+  trade would not need it changed, it is function and belongs in core.
+- **Core files are synced, never edited here.** Change them in
+  `forgelink-portal/core`, publish, then `node scripts/core-sync.mjs`.
+- **A fix that is function is made in core, or it is not finished.** Fixing it
+  only here is how two clients stop being one platform.
+- **Client identity never lives in code.** It lives in `site_content` or in
+  environment configuration.
+
+If you cannot unify something today, register it in `forgelink.core.json` under
+`duplication` with a status and an owner. The build accepts that. It does not
+accept an unrecorded divergence.
+
 ## The Ecosystem
 
 - **forge-blaze-hq** — Brandon's internal OS, multi-tenant SaaS.
