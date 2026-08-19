@@ -1,6 +1,6 @@
 {
-  "coreVersion": "1.0.0",
-  "publishedAt": "2026-08-18",
+  "coreVersion": "1.1.0",
+  "publishedAt": "2026-08-19",
   "canonical": "forgelink-portal/core",
   "clientIdentityDenylist": [
     "Drive Precise",
@@ -16,6 +16,8 @@
   ],
   "files": {
     "FORGELINK_LAW.md": "4f49896b033ae506c8950a0e1d3436d4ee92d05a6537fb3487794db727b9163b",
+    "site/.prettierrc": "1ed88d3b99eced8dc3b6f58f26645466dd1ceaca6c5a9b818531c941ac28e55b",
+    "site/src/lib/contact-links.ts": "cfe022dbbd5d34c1e85faa6107be5d04594ae7d04d5759fd536d64acc826ed2b",
     "site/src/lib/utils.ts": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27"
   },
   "duplication": [
