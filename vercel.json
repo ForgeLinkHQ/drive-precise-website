@@ -25,6 +25,5 @@
         }
       ]
     }
-  ],
-  "//": "Belt and braces. These headers are also declared as Nitro route rules in vite.config.ts, and that is the copy that reaches a visitor: this project builds through the Build Output API, where Vercel routes from .vercel/output/config.json rather than from here. security-headers.test.ts asserts the two agree. No JSONC comments: Snyk's importer parses this as strict JSON and skips the file if it finds any."
+  ]
 }

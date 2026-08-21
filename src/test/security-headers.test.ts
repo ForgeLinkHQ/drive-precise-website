@@ -18,7 +18,11 @@ import { resolve } from "node:path";
 
 const root = resolve(__dirname, "../..");
 
-const vercelJson = JSON.parse(readFileSync(resolve(root, "vercel.json"), "utf8")) as {
+const raw = JSON.parse(readFileSync(resolve(root, "vercel.json"), "utf8")) as Record<
+  string,
+  unknown
+>;
+const vercelJson = raw as {
   headers?: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
 };
 const viteConfig = readFileSync(resolve(root, "vite.config.ts"), "utf8");
@@ -99,5 +103,49 @@ describe("security headers", () => {
     for (const feature of ["camera", "microphone", "geolocation"]) {
       expect(fromVercel.get("Permissions-Policy")).toContain(`${feature}=()`);
     }
+  });
+});
+
+/**
+ * `vercel.json` may only contain keys Vercel's own schema knows.
+ *
+ * This exists because I broke it. I added a `"//"` key to carry an explanatory
+ * note — the convention this repo uses in `tsconfig.json` and `deno.json`,
+ * where it is harmless — and Vercel validates `vercel.json` strictly. An
+ * unrecognised top-level property fails the deployment outright, before the
+ * build runs, so every preview died with "should NOT have additional property"
+ * while CI stayed green and told nobody. JSON has no comments; this file is not
+ * the place to pretend otherwise, and prose about the headers belongs here in
+ * the test instead.
+ */
+const VERCEL_SCHEMA_KEYS = new Set([
+  "$schema",
+  "buildCommand",
+  "cleanUrls",
+  "crons",
+  "devCommand",
+  "framework",
+  "functions",
+  "git",
+  "headers",
+  "images",
+  "ignoreCommand",
+  "installCommand",
+  "outputDirectory",
+  "public",
+  "redirects",
+  "regions",
+  "rewrites",
+  "trailingSlash",
+]);
+
+describe("vercel.json shape", () => {
+  it("contains only keys Vercel recognises", () => {
+    const unknown = Object.keys(raw).filter((k) => !VERCEL_SCHEMA_KEYS.has(k));
+    expect(unknown, "an unrecognised key fails the deployment before the build runs").toEqual([]);
+  });
+
+  it("has no comment key, however tempting", () => {
+    expect(Object.keys(raw)).not.toContain("//");
   });
 });
