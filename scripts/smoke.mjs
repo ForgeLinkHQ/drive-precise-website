@@ -268,13 +268,24 @@ async function main() {
 
     if (status < 200 || status >= 300) fail(route, `HTTP ${status}`);
 
-    // Waited for rather than counted immediately. Most routes render their
-    // heading server-side and this returns at once, but a guarded route like
-    // /admin renders a loading state until it knows whether anyone is signed
-    // in — and "the route rendered a shell but no content" is what a fixed
-    // 400ms sleep reports when that resolution takes 401ms.
-    await becomesVisible(page.locator("h1"), 5000);
-    const h1Count = await page.locator("h1").count();
+    // Counted first, waited for only if the count is zero.
+    //
+    // The wait is here because a guarded route like /admin renders a loading
+    // state until it knows whether anybody is signed in, and "the route
+    // rendered a shell but no content" is what a fixed sleep reports when that
+    // resolution takes a moment longer than the sleep.
+    //
+    // It is *conditional* because waiting unconditionally cost far more than it
+    // looked like it would: `waitFor({ state: "visible" })` blocks for the whole
+    // timeout whenever a heading is present but not painted, and paying that on
+    // every one of thirty-odd routes took the suite from six minutes to over
+    // thirty. Almost every route here renders its heading server-side, so the
+    // count is already right and this costs nothing.
+    let h1Count = await page.locator("h1").count();
+    if (h1Count === 0) {
+      await becomesVisible(page.locator("h1"), 5000);
+      h1Count = await page.locator("h1").count();
+    }
     if (h1Count === 0) fail(route, "no <h1>: the route rendered a shell but no content");
     if (h1Count > 1) notes.push(`${route}: ${h1Count} <h1> elements`);
 
