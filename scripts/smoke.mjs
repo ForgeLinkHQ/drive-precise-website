@@ -110,8 +110,12 @@ function fail(where, message) {
 /** Console noise that is expected and not a defect. */
 function isExpectedNoise(text) {
   return (
-    // The database is deliberately unreachable in this run.
-    text.includes("placeholder.supabase.co") ||
+    // The database is deliberately unreachable in this run. Matched on the
+    // domain rather than the exact host, so changing the stub hostname does
+    // not silently turn expected noise into a failure.
+    text.includes(".supabase.co") ||
+    text.includes("ERR_FAILED") ||
+    text.includes("ERR_ADDRESS_UNREACHABLE") ||
     text.includes("ERR_NAME_NOT_RESOLVED") ||
     text.includes("Failed to load resource") ||
     text.includes("net::ERR") ||
@@ -119,6 +123,30 @@ function isExpectedNoise(text) {
     text.includes("fonts.googleapis.com") ||
     text.includes("fonts.gstatic.com")
   );
+}
+
+/**
+ * A browser context with the database unplugged, and unplugged *the same way
+ * everywhere*.
+ *
+ * Pointing the client at a hostname and trusting it not to resolve turned out
+ * to depend on whose resolver was asked: the suite passed on a machine with no
+ * external DNS and failed on a GitHub runner, where the name resolved and every
+ * request sat waiting for it. The admin route was still rendering its loading
+ * state when the check ran, and every interaction behind it timed out.
+ *
+ * Aborting the request in the browser removes DNS from the question altogether.
+ * The failure is immediate and identical on every machine, which is the only
+ * way §23's promise — that every page works without the database — can be
+ * tested rather than approximated.
+ */
+async function offlineContext(browser, options = {}) {
+  const context = await browser.newContext(options);
+  await context.route(
+    (url) => url.hostname.endsWith(".supabase.co"),
+    (route) => route.abort("addressunreachable"),
+  );
+  return context;
 }
 
 async function waitForServer(url, timeoutMs = 60_000) {
@@ -186,7 +214,7 @@ async function main() {
     // A fresh context per route. The builder persists its draft in
     // localStorage by design, so `/quote?add=...` would otherwise leave items
     // in the basket for every route checked after it.
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const context = await offlineContext(browser, { viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
     page.on("console", (message) => {
       if (message.type() !== "error") return;
@@ -245,7 +273,7 @@ async function main() {
 
   // ── The journey that matters: build a quote end to end. ─────────────────
   console.log("\nWalking the quote builder…");
-  const journeyContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const journeyContext = await offlineContext(browser, { viewport: { width: 1280, height: 900 } });
   const page = await journeyContext.newPage();
   const journeyErrors = [];
   page.on("pageerror", (error) => journeyErrors.push(error.message));
@@ -358,7 +386,7 @@ async function main() {
 
   // ── The elements the polish pass added, checked on a real page. ────────
   console.log("\nChecking the hero, sticky bar and resume banner…");
-  const polishContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const polishContext = await offlineContext(browser, { viewport: { width: 1280, height: 900 } });
   const polishPage = await polishContext.newPage();
   polishPage.on("pageerror", (error) => fail("polish", `uncaught: ${error.message}`));
   try {
@@ -429,7 +457,7 @@ async function main() {
   // ── Overlays and menus. These are the pieces a route-level check cannot
   //    see: they only exist once something is opened. ─────────────────────
   console.log("\nChecking overlays, menus and the mobile builder bar…");
-  const uiContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const uiContext = await offlineContext(browser, { viewport: { width: 1440, height: 900 } });
   const uiPage = await uiContext.newPage();
   uiPage.on("pageerror", (error) => fail("interactions", `uncaught: ${error.message}`));
   uiPage.on("console", (m) => {
@@ -496,7 +524,7 @@ async function main() {
   await uiContext.close();
 
   // Mobile menu sheet and the builder's summary bar.
-  const sheetContext = await browser.newContext({
+  const sheetContext = await offlineContext(browser, {
     viewport: { width: 390, height: 844 },
     isMobile: true,
     hasTouch: true,
@@ -550,7 +578,7 @@ async function main() {
 
   // ── Mobile viewport: the bottom bar and one-handed operation (§52). ─────
   console.log("\nChecking the mobile layout…");
-  const mobile = await browser.newContext({
+  const mobile = await offlineContext(browser, {
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3,
     isMobile: true,
