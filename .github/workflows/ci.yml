@@ -101,7 +101,13 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: postgres
+          # No password at all, rather than a throwaway one. The container is
+          # ephemeral and reachable only from this job, but a credential-shaped
+          # line in a repository is a credential-shaped line, and secret
+          # scanning is right to flag those rather than try to judge which ones
+          # matter. This is also what the local harness does (`initdb -A
+          # trust`), so the two now agree.
+          POSTGRES_HOST_AUTH_METHOD: trust
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -115,7 +121,7 @@ jobs:
       - name: Verify the migrations and the rules they carry
         run: bash scripts/verify-sql.sh
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: postgresql://postgres@localhost:5432/postgres
 
   # Catches the class of mistake unit tests cannot: a page that renders in a
   # test but throws in a real browser, a route that 404s, a nav link pointing at
