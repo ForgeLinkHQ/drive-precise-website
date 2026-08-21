@@ -1,0 +1,72 @@
+name: Security
+
+# Dependencies change under you. A lockfile that was clean when it was written
+# is not clean forever, and the first anybody hears about it is usually an
+# advisory somebody happens to read. So this runs on every push, on every pull
+# request, and once a week on a schedule — the schedule is the important one,
+# because most new vulnerabilities arrive in code nobody has touched.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  snyk:
+    name: Snyk
+    runs-on: ubuntu-latest
+    # A fork's pull request cannot see repository secrets, so this would fail
+    # for a reason that has nothing to do with the code. Skipping is honest;
+    # failing would teach people the job is noise.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Without the token the whole job is meaningless, and a green tick on a
+      # scan that never ran is worse than a red one. Say so and stop.
+      - name: Check the token is present
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          if [ -z "$SNYK_TOKEN" ]; then
+            echo "::error::SNYK_TOKEN is not set on this repository."
+            echo "Set it with: gh secret set SNYK_TOKEN -R ${{ github.repository }}"
+            exit 1
+          fi
+
+      - uses: snyk/actions/setup@master
+
+      # Dependencies. `--all-projects` picks up the edge functions' own
+      # manifests as well as the root package.json.
+      - name: Snyk open source
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk test --all-projects --severity-threshold=high
+
+      # The first-party code. Separated from the dependency scan so a failure
+      # says which of the two it was without anybody opening the log.
+      - name: Snyk code
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk code test --severity-threshold=high
+
+      # Only from the default branch: monitoring a feature branch fills the
+      # Snyk project list with branches that stopped existing weeks ago.
+      - name: Send the dependency tree to Snyk
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk monitor --all-projects

@@ -40,11 +40,15 @@ export function esc(value: unknown): string {
 }
 
 export function eyebrow(text: string): string {
-  return `<p style="margin:0 0 8px;font-family:${FONT};font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:${B.blue};font-weight:700;">${esc(text)}</p>`;
+  return `<p style="margin:0 0 8px;font-family:${FONT};font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:${B.blue};font-weight:700;">${
+    esc(text)
+  }</p>`;
 }
 
 export function h1(text: string): string {
-  return `<h1 style="margin:0 0 16px;font-family:${FONT};font-size:24px;line-height:1.25;color:${B.ink};font-weight:700;">${esc(text)}</h1>`;
+  return `<h1 style="margin:0 0 16px;font-family:${FONT};font-size:24px;line-height:1.25;color:${B.ink};font-weight:700;">${
+    esc(text)
+  }</h1>`;
 }
 
 export function p(text: string): string {
@@ -69,8 +73,12 @@ export function facts(rows: Array<[string, string | null | undefined]>): string 
     .map(
       ([label, value]) =>
         `<tr>
-           <td style="padding:6px 12px 6px 0;font-family:${FONT};font-size:13px;color:${B.muted};white-space:nowrap;vertical-align:top;">${esc(label)}</td>
-           <td style="padding:6px 0;font-family:${FONT};font-size:15px;color:${B.ink};font-weight:600;">${esc(value)}</td>
+           <td style="padding:6px 12px 6px 0;font-family:${FONT};font-size:13px;color:${B.muted};white-space:nowrap;vertical-align:top;">${
+          esc(label)
+        }</td>
+           <td style="padding:6px 0;font-family:${FONT};font-size:15px;color:${B.ink};font-weight:600;">${
+          esc(value)
+        }</td>
          </tr>`,
     )
     .join("");
@@ -81,7 +89,11 @@ export function facts(rows: Array<[string, string | null | undefined]>): string 
 export function btn(label: string, href: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px;">
     <tr><td style="background:${B.blue};border-radius:6px;">
-      <a href="${esc(href)}" style="display:inline-block;padding:12px 22px;font-family:${FONT};font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;">${esc(label)}</a>
+      <a href="${
+    esc(href)
+  }" style="display:inline-block;padding:12px 22px;font-family:${FONT};font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;">${
+    esc(label)
+  }</a>
     </td></tr>
   </table>`;
 }
@@ -104,6 +116,54 @@ export function ownerWrapper(inner: string): string {
           <p style="margin:0;font-family:${FONT};font-size:12px;line-height:1.5;color:${B.faint};">
             Drive Precise Ltd — sent automatically by your website.<br>
             Manage alerts in the ForgeLink Portal.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+/**
+ * The customer wrapper.
+ *
+ * Where the owner's version is deliberately plain — an operational note to
+ * somebody who already knows who we are — this one has to introduce itself. It
+ * carries the masthead, and it carries the two lines of small print that turn a
+ * marketing email into a service one: who is writing, and how to stop.
+ *
+ * `unsubscribeUrl` is optional because not every message has one. A booking
+ * confirmation and an MOT reminder are service messages about work this
+ * business is doing or has been asked about, and there is no opting out of
+ * being told your own appointment moved. Anything genuinely promotional passes
+ * a URL, and it is rendered where a person can find it.
+ */
+export function customerWrapper(inner: string, unsubscribeUrl?: string): string {
+  return `<!doctype html>
+<html><body style="margin:0;padding:0;background:${B.wash};">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:${B.wash};padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;background:${B.paper};border:1px solid ${B.border};border-radius:10px;overflow:hidden;">
+        <tr><td style="background:${B.blue};padding:18px 28px;">
+          <p style="margin:0;font-family:${FONT};font-size:17px;font-weight:700;letter-spacing:.02em;color:#FFFFFF;">
+            Drive Precise
+          </p>
+          <p style="margin:2px 0 0;font-family:${FONT};font-size:12px;color:${B.yellow};">
+            Mobile BMW specialist &middot; Hampshire &amp; Surrey
+          </p>
+        </td></tr>
+        <tr><td style="padding:28px 28px 8px;">${inner}</td></tr>
+        <tr><td style="padding:0 28px 24px;">
+          <div style="height:1px;background:${B.border};margin:8px 0 14px;"></div>
+          <p style="margin:0;font-family:${FONT};font-size:12px;line-height:1.6;color:${B.faint};">
+            Drive Precise Ltd. Independent specialist &mdash; not affiliated with BMW AG.
+            ${
+    unsubscribeUrl
+      ? `<br><a href="${
+        esc(unsubscribeUrl)
+      }" style="color:${B.faint};">Stop receiving these</a>.`
+      : ""
+  }
           </p>
         </td></tr>
       </table>

@@ -49,8 +49,13 @@ own Supabase project, its own Vercel deployment, no shared data.
 React 19 · TanStack Start (SSR) + TanStack Router · Vite 8 · Tailwind 4 ·
 Supabase (own project) · Vercel (Nitro preset) · Vitest.
 
-Deliberately no Stripe: nothing is paid for on this site. A quote request is free
-and non-binding, and the price is confirmed by a human before anything is booked.
+**Nothing on the public site is payable.** A quote request is free and
+non-binding, and the price is confirmed by a human before anything is booked —
+that rule has not moved. What sits after it now has: once a person has quoted
+the job and the customer has accepted, a deposit can be taken to hold a date.
+That is the `paymentPoint: "on_quote_accept"` the automotive vertical has always
+declared. There is still no basket, no checkout and no price a visitor can pay
+without a human having looked at their car first.
 
 ## The Rules That Shape The Code
 

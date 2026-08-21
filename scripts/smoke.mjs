@@ -14,10 +14,26 @@
  *   - any console error, including React's hydration warnings;
  *   - any uncaught page exception.
  *
- * Supabase is deliberately pointed at a hostname that does not resolve. That is
+ * Supabase is deliberately pointed at a hostname that cannot resolve. That is
  * the test, not a limitation: §23's promise that the catalogue, the builder and
  * every page work without the database has to be verified, not asserted. Failed
  * fetches to that host are the one thing filtered out of the console check.
+ *
+ * The hostname has to satisfy two things at once, and getting one of them wrong
+ * is why this suite passed locally and failed in CI for weeks.
+ *
+ * It has to be *unresolvable*, so the app's failure is instant and the smoke
+ * run is not measuring somebody's DNS. `placeholder.supabase.co` is a single
+ * label under a domain that serves wildcard DNS, so it is resolvable on a real
+ * network even though it resolves to nothing useful — the request leaves the
+ * machine and something waits on it. A second label puts it outside the
+ * wildcard, which matches one label only.
+ *
+ * And it has to be *allowed by the site's own CSP*, which now genuinely applies
+ * to the preview build. `connect-src` permits `https://*.supabase.co` and
+ * nothing else, so an `.invalid` host is blocked before the request is made and
+ * every page reports a CSP violation instead of a failed fetch. CSP host
+ * wildcards span any number of labels, which is what lets one name be both.
  *
  * Run: node scripts/smoke.mjs
  */
@@ -94,8 +110,12 @@ function fail(where, message) {
 /** Console noise that is expected and not a defect. */
 function isExpectedNoise(text) {
   return (
-    // The database is deliberately unreachable in this run.
-    text.includes("placeholder.supabase.co") ||
+    // The database is deliberately unreachable in this run. Matched on the
+    // domain rather than the exact host, so changing the stub hostname does
+    // not silently turn expected noise into a failure.
+    text.includes(".supabase.co") ||
+    text.includes("ERR_FAILED") ||
+    text.includes("ERR_ADDRESS_UNREACHABLE") ||
     text.includes("ERR_NAME_NOT_RESOLVED") ||
     text.includes("Failed to load resource") ||
     text.includes("net::ERR") ||
@@ -103,6 +123,50 @@ function isExpectedNoise(text) {
     text.includes("fonts.googleapis.com") ||
     text.includes("fonts.gstatic.com")
   );
+}
+
+/**
+ * A browser context with the database unplugged, and unplugged *the same way
+ * everywhere*.
+ *
+ * Pointing the client at a hostname and trusting it not to resolve turned out
+ * to depend on whose resolver was asked: the suite passed on a machine with no
+ * external DNS and failed on a GitHub runner, where the name resolved and every
+ * request sat waiting for it. The admin route was still rendering its loading
+ * state when the check ran, and every interaction behind it timed out.
+ *
+ * Aborting the request in the browser removes DNS from the question altogether.
+ * The failure is immediate and identical on every machine, which is the only
+ * way §23's promise — that every page works without the database — can be
+ * tested rather than approximated.
+ */
+/**
+ * Wait for something to appear, rather than sleeping and hoping.
+ *
+ * `waitForTimeout(400)` followed by `isVisible()` asserts that a thing became
+ * visible within exactly 400ms on whatever machine is running — which is a
+ * property of the runner, not of the site. It held here and did not on a
+ * GitHub runner, and the resulting failure ("sticky basket bar did not appear")
+ * reads like a broken feature rather than a slow computer.
+ *
+ * Returns false rather than throwing so each caller keeps its own message.
+ */
+async function becomesVisible(locator, timeout = 8000) {
+  try {
+    await locator.first().waitFor({ state: "visible", timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function offlineContext(browser, options = {}) {
+  const context = await browser.newContext(options);
+  await context.route(
+    (url) => url.hostname.endsWith(".supabase.co"),
+    (route) => route.abort("addressunreachable"),
+  );
+  return context;
 }
 
 async function waitForServer(url, timeoutMs = 60_000) {
@@ -128,7 +192,7 @@ async function main() {
     detached: true,
     env: {
       ...process.env,
-      VITE_SUPABASE_URL: "https://placeholder.supabase.co",
+      VITE_SUPABASE_URL: "https://unreachable.smoke.supabase.co",
       VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_placeholder",
     },
   });
@@ -170,7 +234,7 @@ async function main() {
     // A fresh context per route. The builder persists its draft in
     // localStorage by design, so `/quote?add=...` would otherwise leave items
     // in the basket for every route checked after it.
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const context = await offlineContext(browser, { viewport: { width: 1280, height: 900 } });
     const page = await context.newPage();
     page.on("console", (message) => {
       if (message.type() !== "error") return;
@@ -204,7 +268,24 @@ async function main() {
 
     if (status < 200 || status >= 300) fail(route, `HTTP ${status}`);
 
-    const h1Count = await page.locator("h1").count();
+    // Counted first, waited for only if the count is zero.
+    //
+    // The wait is here because a guarded route like /admin renders a loading
+    // state until it knows whether anybody is signed in, and "the route
+    // rendered a shell but no content" is what a fixed sleep reports when that
+    // resolution takes a moment longer than the sleep.
+    //
+    // It is *conditional* because waiting unconditionally cost far more than it
+    // looked like it would: `waitFor({ state: "visible" })` blocks for the whole
+    // timeout whenever a heading is present but not painted, and paying that on
+    // every one of thirty-odd routes took the suite from six minutes to over
+    // thirty. Almost every route here renders its heading server-side, so the
+    // count is already right and this costs nothing.
+    let h1Count = await page.locator("h1").count();
+    if (h1Count === 0) {
+      await becomesVisible(page.locator("h1"), 5000);
+      h1Count = await page.locator("h1").count();
+    }
     if (h1Count === 0) fail(route, "no <h1>: the route rendered a shell but no content");
     if (h1Count > 1) notes.push(`${route}: ${h1Count} <h1> elements`);
 
@@ -229,7 +310,7 @@ async function main() {
 
   // ── The journey that matters: build a quote end to end. ─────────────────
   console.log("\nWalking the quote builder…");
-  const journeyContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const journeyContext = await offlineContext(browser, { viewport: { width: 1280, height: 900 } });
   const page = await journeyContext.newPage();
   const journeyErrors = [];
   page.on("pageerror", (error) => journeyErrors.push(error.message));
@@ -342,7 +423,7 @@ async function main() {
 
   // ── The elements the polish pass added, checked on a real page. ────────
   console.log("\nChecking the hero, sticky bar and resume banner…");
-  const polishContext = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const polishContext = await offlineContext(browser, { viewport: { width: 1280, height: 900 } });
   const polishPage = await polishContext.newPage();
   polishPage.on("pageerror", (error) => fail("polish", `uncaught: ${error.message}`));
   try {
@@ -352,7 +433,9 @@ async function main() {
     // The plate is the site's primary call to action; if it stops rendering,
     // the homepage loses its entry point.
     const plate = polishPage.getByLabel("Your registration");
-    if (!(await plate.isVisible())) fail("polish", "hero registration plate is not visible");
+    if (!(await becomesVisible(plate))) {
+      fail("polish", "hero registration plate is not visible");
+    }
 
     // A visitor with nothing chosen must not see a basket bar or a resume
     // prompt — both are noise until there is something to act on.
@@ -374,16 +457,13 @@ async function main() {
       .getByRole("button", { name: /Add/ })
       .first()
       .click();
-    await polishPage.waitForTimeout(400);
-
-    if (!(await polishPage.getByRole("link", { name: /^Continue/ }).isVisible())) {
+    if (!(await becomesVisible(polishPage.getByRole("link", { name: /^Continue/ })))) {
       fail("polish", "desktop sticky basket bar did not appear after adding a service");
     }
     await polishPage.screenshot({ path: `${SHOTS}/sticky-bar.png` });
 
     await polishPage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    await polishPage.waitForTimeout(600);
-    if (!(await polishPage.getByText("Your request is still here").isVisible())) {
+    if (!(await becomesVisible(polishPage.getByText("Your request is still here")))) {
       fail("polish", "resume banner did not appear with items in the basket");
     }
     await polishPage.screenshot({ path: `${SHOTS}/home-resume.png` });
@@ -391,9 +471,10 @@ async function main() {
     // Breadcrumbs on a service page — the route back up for someone who
     // landed from a search.
     await polishPage.goto(`${BASE}/service/minor-service`, { waitUntil: "domcontentloaded" });
-    await polishPage.waitForTimeout(500);
     const crumbs = polishPage.getByRole("navigation", { name: "Breadcrumb" });
-    if (!(await crumbs.isVisible())) fail("polish", "breadcrumbs missing on a service page");
+    if (!(await becomesVisible(crumbs))) {
+      fail("polish", "breadcrumbs missing on a service page");
+    }
 
     // Every page should offer somewhere to go next.
     if (
@@ -413,7 +494,7 @@ async function main() {
   // ── Overlays and menus. These are the pieces a route-level check cannot
   //    see: they only exist once something is opened. ─────────────────────
   console.log("\nChecking overlays, menus and the mobile builder bar…");
-  const uiContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const uiContext = await offlineContext(browser, { viewport: { width: 1440, height: 900 } });
   const uiPage = await uiContext.newPage();
   uiPage.on("pageerror", (error) => fail("interactions", `uncaught: ${error.message}`));
   uiPage.on("console", (m) => {
@@ -480,7 +561,7 @@ async function main() {
   await uiContext.close();
 
   // Mobile menu sheet and the builder's summary bar.
-  const sheetContext = await browser.newContext({
+  const sheetContext = await offlineContext(browser, {
     viewport: { width: 390, height: 844 },
     isMobile: true,
     hasTouch: true,
@@ -534,7 +615,7 @@ async function main() {
 
   // ── Mobile viewport: the bottom bar and one-handed operation (§52). ─────
   console.log("\nChecking the mobile layout…");
-  const mobile = await browser.newContext({
+  const mobile = await offlineContext(browser, {
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3,
     isMobile: true,

@@ -29,7 +29,7 @@ export async function resolveOwnerEmail(
   context = "owner alert",
 ): Promise<OwnerRecipient> {
   const settings = await supabase
-    .from("owner_alert_settings")
+    .from("owner_alert_recipient")
     .select("notify_email")
     .eq("id", 1)
     .maybeSingle();

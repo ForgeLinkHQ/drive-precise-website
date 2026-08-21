@@ -25,3 +25,17 @@ export function jsonResponse(body: unknown, status = 200): Response {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+
+/**
+ * The same headers, plus one the default list has no reason to mention.
+ *
+ * Stripe signs every delivery and sends the signature in `stripe-signature`.
+ * A preflight that does not name it fails the webhook before the handler is
+ * reached, and the symptom is a webhook that silently never fires.
+ */
+export function corsHeadersWith(extra: string): Record<string, string> {
+  return {
+    ...corsHeaders,
+    "Access-Control-Allow-Headers": `${ALLOWED_HEADERS}, ${extra}`,
+  };
+}

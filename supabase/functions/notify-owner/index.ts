@@ -93,7 +93,9 @@ function build(event: AlertEvent, d: Detail): { subject: string; html: string } 
 
     case "quote_accepted": {
       return {
-        subject: `Quote accepted — ${d.registration ?? "vehicle"} (${esc(d.reference ?? "")})`,
+        subject: `Quote accepted — ${d.registration ?? "vehicle"} (${
+          esc(d.reference ?? "")
+        })`,
         html: ownerWrapper(
           eyebrow("Quote accepted") +
             h1(`${d.customer_name ?? "A customer"} has said yes`) +
@@ -130,10 +132,16 @@ function build(event: AlertEvent, d: Detail): { subject: string; html: string } 
     case "stale_enquiry": {
       const waited = waitingFor(d.waiting_since);
       return {
-        subject: `Still waiting — ${d.customer_name ?? "a customer"} (${esc(d.reference ?? "")})`,
+        subject: `Still waiting — ${d.customer_name ?? "a customer"} (${
+          esc(d.reference ?? "")
+        })`,
         html: ownerWrapper(
           eyebrow("Nobody has replied") +
-            h1(`${d.customer_name ?? "A customer"} has been waiting${waited ? ` ${waited}` : ""}`) +
+            h1(
+              `${d.customer_name ?? "A customer"} has been waiting${
+                waited ? ` ${waited}` : ""
+              }`,
+            ) +
             facts([
               ["Reference", d.reference as string],
               ["Vehicle", d.registration as string],

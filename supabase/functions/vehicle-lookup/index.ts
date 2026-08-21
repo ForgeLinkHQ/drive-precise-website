@@ -28,8 +28,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { fetchPackage, isEnabled, mapImage, mapVehicleData } from "./ukvd.ts";
 
-const DVLA_ENDPOINT =
-  Deno.env.get("DVLA_VES_ENDPOINT") ??
+const DVLA_ENDPOINT = Deno.env.get("DVLA_VES_ENDPOINT") ??
   "https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles";
 
 /** DVLA is usually fast. Waiting longer than this is worse than asking. */
@@ -119,8 +118,7 @@ function plausible(reg: string): boolean {
  * quietly becoming a tracking one.
  */
 async function clientHash(req: Request): Promise<string> {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("cf-connecting-ip") ??
     "unknown";
   const salt = Deno.env.get("LOOKUP_HASH_SALT") ?? "drive-precise-lookup";
@@ -167,7 +165,9 @@ function fromVes(reg: string, body: Record<string, unknown>): PublicVehicle {
     taxDueDate: textOrNull(body.taxDueDate),
     motStatus: textOrNull(body.motStatus),
     motExpiryDate: textOrNull(body.motExpiryDate),
-    markedForExport: typeof body.markedForExport === "boolean" ? body.markedForExport : null,
+    markedForExport: typeof body.markedForExport === "boolean"
+      ? body.markedForExport
+      : null,
     source: "dvla-ves",
   };
 }
@@ -179,7 +179,11 @@ function fromVes(reg: string, body: Record<string, unknown>): PublicVehicle {
  * the cache, the front end, the enquiry record — is provider-agnostic. Which
  * company answered is a detail carried in `source`, not a branch in the UI.
  */
-function fromUkvd(reg: string, items: Record<string, unknown>, imageUrl: string | null): PublicVehicle {
+function fromUkvd(
+  reg: string,
+  items: Record<string, unknown>,
+  imageUrl: string | null,
+): PublicVehicle {
   const v = mapVehicleData(items);
   return {
     registration: reg,
@@ -197,7 +201,9 @@ function fromUkvd(reg: string, items: Record<string, unknown>, imageUrl: string 
     yearOfManufacture: v.yearOfManufacture,
     // UKVD gives a full first-registration date; the month form is kept so the
     // cached shape stays identical whichever provider answered.
-    monthOfFirstRegistration: v.firstRegisteredDate ? v.firstRegisteredDate.slice(0, 7) : null,
+    monthOfFirstRegistration: v.firstRegisteredDate
+      ? v.firstRegisteredDate.slice(0, 7)
+      : null,
     co2Emissions: v.co2Emissions,
     euroStatus: v.euroStatus,
     wheelplan: v.wheelplan,
@@ -234,7 +240,9 @@ function fromCache(row: Record<string, unknown>): PublicVehicle {
     taxDueDate: (row.tax_due_date as string) ?? null,
     motStatus: (row.mot_status as string) ?? null,
     motExpiryDate: (row.mot_expiry_date as string) ?? null,
-    markedForExport: typeof row.marked_for_export === "boolean" ? row.marked_for_export : null,
+    markedForExport: typeof row.marked_for_export === "boolean"
+      ? row.marked_for_export
+      : null,
     source: String(row.source ?? "dvla-ves"),
   };
 }
@@ -304,10 +312,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const admin =
-    supabaseUrl && serviceKey
-      ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
-      : null;
+  const admin = supabaseUrl && serviceKey
+    ? createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } })
+    : null;
 
   // Rate limit before anything expensive. A failure to check is not a reason
   // to skip the check, so an unreachable database closes the endpoint rather
@@ -330,7 +337,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .gt("fetched_at", new Date(Date.now() - CACHE_DAYS * 86_400_000).toISOString())
       .maybeSingle();
 
-    if (data) return json({ status: "found", vehicle: fromCache(data), cached: true }, 200);
+    if (data) {
+      return json({ status: "found", vehicle: fromCache(data), cached: true }, 200);
+    }
   }
 
   const ukvdKey = Deno.env.get("UKVD_API_KEY");
@@ -358,7 +367,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // package must never cost the lookup that already succeeded.
       let imageUrl: string | null = null;
       if (isEnabled("VehicleImageData")) {
-        const image = await fetchPackage("VehicleImageData", registration, ukvdKey, TIMEOUT_MS);
+        const image = await fetchPackage(
+          "VehicleImageData",
+          registration,
+          ukvdKey,
+          TIMEOUT_MS,
+        );
         if (image.ok && image.items) imageUrl = mapImage(image.items);
       }
 
@@ -403,4 +417,3 @@ Deno.serve(async (req: Request): Promise<Response> => {
   await cacheVehicle(admin, vehicle);
   return json({ status: "found", vehicle, cached: false }, 200);
 });
-
