@@ -140,6 +140,26 @@ function isExpectedNoise(text) {
  * way §23's promise — that every page works without the database — can be
  * tested rather than approximated.
  */
+/**
+ * Wait for something to appear, rather than sleeping and hoping.
+ *
+ * `waitForTimeout(400)` followed by `isVisible()` asserts that a thing became
+ * visible within exactly 400ms on whatever machine is running — which is a
+ * property of the runner, not of the site. It held here and did not on a
+ * GitHub runner, and the resulting failure ("sticky basket bar did not appear")
+ * reads like a broken feature rather than a slow computer.
+ *
+ * Returns false rather than throwing so each caller keeps its own message.
+ */
+async function becomesVisible(locator, timeout = 8000) {
+  try {
+    await locator.first().waitFor({ state: "visible", timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function offlineContext(browser, options = {}) {
   const context = await browser.newContext(options);
   await context.route(
@@ -248,6 +268,12 @@ async function main() {
 
     if (status < 200 || status >= 300) fail(route, `HTTP ${status}`);
 
+    // Waited for rather than counted immediately. Most routes render their
+    // heading server-side and this returns at once, but a guarded route like
+    // /admin renders a loading state until it knows whether anyone is signed
+    // in — and "the route rendered a shell but no content" is what a fixed
+    // 400ms sleep reports when that resolution takes 401ms.
+    await becomesVisible(page.locator("h1"), 5000);
     const h1Count = await page.locator("h1").count();
     if (h1Count === 0) fail(route, "no <h1>: the route rendered a shell but no content");
     if (h1Count > 1) notes.push(`${route}: ${h1Count} <h1> elements`);
@@ -396,7 +422,9 @@ async function main() {
     // The plate is the site's primary call to action; if it stops rendering,
     // the homepage loses its entry point.
     const plate = polishPage.getByLabel("Your registration");
-    if (!(await plate.isVisible())) fail("polish", "hero registration plate is not visible");
+    if (!(await becomesVisible(plate))) {
+      fail("polish", "hero registration plate is not visible");
+    }
 
     // A visitor with nothing chosen must not see a basket bar or a resume
     // prompt — both are noise until there is something to act on.
@@ -418,16 +446,13 @@ async function main() {
       .getByRole("button", { name: /Add/ })
       .first()
       .click();
-    await polishPage.waitForTimeout(400);
-
-    if (!(await polishPage.getByRole("link", { name: /^Continue/ }).isVisible())) {
+    if (!(await becomesVisible(polishPage.getByRole("link", { name: /^Continue/ })))) {
       fail("polish", "desktop sticky basket bar did not appear after adding a service");
     }
     await polishPage.screenshot({ path: `${SHOTS}/sticky-bar.png` });
 
     await polishPage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    await polishPage.waitForTimeout(600);
-    if (!(await polishPage.getByText("Your request is still here").isVisible())) {
+    if (!(await becomesVisible(polishPage.getByText("Your request is still here")))) {
       fail("polish", "resume banner did not appear with items in the basket");
     }
     await polishPage.screenshot({ path: `${SHOTS}/home-resume.png` });
@@ -435,9 +460,10 @@ async function main() {
     // Breadcrumbs on a service page — the route back up for someone who
     // landed from a search.
     await polishPage.goto(`${BASE}/service/minor-service`, { waitUntil: "domcontentloaded" });
-    await polishPage.waitForTimeout(500);
     const crumbs = polishPage.getByRole("navigation", { name: "Breadcrumb" });
-    if (!(await crumbs.isVisible())) fail("polish", "breadcrumbs missing on a service page");
+    if (!(await becomesVisible(crumbs))) {
+      fail("polish", "breadcrumbs missing on a service page");
+    }
 
     // Every page should offer somewhere to go next.
     if (
