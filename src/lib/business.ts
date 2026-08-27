@@ -256,6 +256,14 @@ export function checkCoverage(postcode: string): AreaCoverage {
  *
  * Surfaced in the admin dashboard. Empty array means the site is ready to take
  * real enquiries as far as contact details are concerned.
+ *
+ * **Statutory and contact gaps only.** `LegalPage` renders a public sentence
+ * off the back of a non-empty list — "company details on this site are also
+ * still unconfigured, which a UK limited company is required to publish" — so
+ * anything added here is a statement made to customers on the legal pages.
+ * Operational configuration does not belong in it: a missing TechMan booking
+ * parameter would make that sentence untrue on the most sensitive pages on the
+ * site. `techmanConfigurationIssues()` is reported separately, in admin only.
  */
 export function configurationIssues(): string[] {
   const issues: string[] = [];

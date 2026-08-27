@@ -125,7 +125,20 @@ Prefilled WhatsApp message — the customer only presses send
 Drive Precise confirms the vehicle-specific price
         ↓
 Admin marks it quoted / accepted / booked, copies the TechMan block
+        ↓
+TechMan sends the estimate; the customer approves and pays on its portal
 ```
+
+The second door, for work with a genuinely fixed price:
+
+```
+/book  →  postcode coverage check  →  TechMan web booking widget
+                                              ↓
+                                     straight into the live diary
+```
+
+Only a single, confirmed, fixed-price service mapped to a labour slot may be
+booked this way — `selfBookableSlot()` is the gate, and §20 is why.
 
 ### Design rules the code enforces
 
@@ -175,7 +188,11 @@ Views: `enquiry_funnel_daily`, `service_attachment`, `partner_referral_summary`.
 
 ## Not built yet, by design
 
-Registration lookup (§21), TechMan API integration (§28 — no supported API
-exists, so the handoff is a copy block), customer accounts (§38), automated
-review requests (§39) and service reminders (§40). The schema has room for each;
-none of them block launch.
+Customer accounts (§38), automated review requests (§39) and service reminders
+(§40). The schema has room for each; none of them block launch.
+
+**TechMan API integration** (§28) remains unbuilt because no supported API
+exists, not because nobody got to it. The website now embeds TechMan's booking
+widget at `/book` and links its customer portal, and `techman-handoff.ts` is an
+interface with a `manual` provider live and an `api` provider dark — so the day
+TechMan confirm credentials, nothing that calls it has to change.

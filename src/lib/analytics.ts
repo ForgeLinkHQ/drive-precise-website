@@ -43,6 +43,14 @@ export type SiteEvent =
   | "review_step_reached"
   | "quote_requested"
   | "whatsapp_clicked"
+  // The TechMan booking funnel (§28). `booking_started` fires when the widget
+  // is reached, `booking_link_sent` when a priced enquiry is handed a deep
+  // link. The gap between them and `quote_requested` is what says whether
+  // self-service booking is actually taking work off the phone.
+  | "booking_page_view"
+  | "booking_started"
+  | "booking_link_sent"
+  | "booking_unavailable"
   | "partner_suggested"
   | "trade_enquiry_submitted"
   | "contact_submitted";

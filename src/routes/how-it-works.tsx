@@ -33,7 +33,7 @@ const STEPS = [
   {
     n: "03",
     title: "We confirm the real price",
-    body: 'Usually on WhatsApp, usually the same day. This is where a "from" price becomes a firm one, for your car, with the parts it actually needs. Nothing is booked until you\'re happy with it.',
+    body: 'Usually on WhatsApp, usually the same day. This is where a "from" price becomes a firm one, for your car, with the parts it actually needs. We send it over as an estimate you can read, approve and pay online in your own time. Nothing is booked until you do.',
   },
   {
     n: "04",
@@ -53,6 +53,10 @@ const STEPS = [
 ];
 
 const ANSWERS = [
+  {
+    q: "Can I just book something without waiting for a quote?",
+    a: "For jobs with a genuinely fixed price, yes — pick a time on the booking page and it goes straight into the diary at the price shown. Anything where the cost depends on what your particular car needs goes through a quote first, because we would rather not confirm a price we might then have to change.",
+  },
   {
     q: "What if the job turns out to need a ramp?",
     a: "We'll tell you before you commit. Where it does, we can collect the car, get the work done with the right equipment and bring it back.",

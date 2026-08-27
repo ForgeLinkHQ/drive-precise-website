@@ -60,6 +60,7 @@ const ROUTES = [
   "/promotions",
   "/modifications",
   "/return-to-standard",
+  "/book",
   "/how-it-works",
   "/trade",
   "/partners",
