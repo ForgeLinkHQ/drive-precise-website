@@ -45,6 +45,7 @@ import {
   type EnquirySnapshot,
 } from "@/lib/enquiry";
 import { buildWhatsAppMessage } from "@/lib/whatsapp";
+import { selfBookableSlot, techmanBookingHref, techmanPortalConfigured } from "@/lib/techman";
 import { checkCoverage } from "@/lib/business";
 import { formatRegistration, isPlausibleRegistration } from "@/lib/vehicle";
 import { ASKABLE_SOURCES, REFERRAL_SOURCE_LABEL, type ReferralSource } from "@/lib/attribution";
@@ -882,6 +883,18 @@ function ReviewRow({
 
 function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?: string }) {
   const message = buildWhatsAppMessage(snapshot);
+  const { services } = useCatalogue();
+
+  /**
+   * Can this customer just book it themselves (§28)?
+   *
+   * Only when the basket is a single confirmed fixed-price service mapped to a
+   * TechMan labour slot — `selfBookableSlot()` holds that rule, and the
+   * reasoning for each part of it. Everything else waits for a human to price
+   * it, which is the whole premise of this site and is not being relaxed here.
+   */
+  const slot = selfBookableSlot(snapshot.items, services);
+  const bookHref = slot ? techmanBookingHref({ slot, registration: snapshot.registration }) : null;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -932,7 +945,9 @@ function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?
             {[
               "We check your registration and work out exactly which parts your car takes.",
               "You get a firm price, on WhatsApp unless you'd rather we rang.",
-              "If you're happy, we agree a date. Nothing is booked until you say so.",
+              techmanPortalConfigured()
+                ? "Happy with it? We send the estimate over as a link you can approve and pay online. Nothing is booked until you do."
+                : "If you're happy, we agree a date. Nothing is booked until you say so.",
             ].map((line, index) => (
               <li key={line} className="relative text-sm text-muted-foreground">
                 <span
@@ -943,6 +958,36 @@ function SentScreen({ snapshot, warning }: { snapshot: EnquirySnapshot; warning?
               </li>
             ))}
           </ol>
+
+          {/* The self-service door (§28). Rendered only for a single confirmed
+              fixed-price job, so a customer never books a slot at a price we
+              would have to revise once we saw the car. */}
+          {bookHref && (
+            <div className="mt-8 rounded-lg border border-accent/40 bg-accent-wash p-5 shadow-card">
+              <h2 className="font-display text-lg font-semibold">This one you can just book</h2>
+              <p className="mt-2 text-muted-foreground">
+                The price for this job is fixed, so there's nothing for us to work out. Pick a time
+                that suits you and it goes straight into the diary.
+              </p>
+              <div className="mt-4">
+                <Button asChild size="lg">
+                  <a
+                    href={bookHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() =>
+                      trackEvent("booking_link_sent", {
+                        itemId: slot ?? undefined,
+                        meta: { from: "quote-sent" },
+                      })
+                    }
+                  >
+                    Book this now
+                  </a>
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="mt-8 rounded-lg border border-border bg-card p-5 shadow-card">
             <h2 className="font-display text-lg font-semibold">Want an answer faster?</h2>

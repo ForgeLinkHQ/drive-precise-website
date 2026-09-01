@@ -23,13 +23,33 @@ function BookingPage() {
     >
       <h2>When a booking exists</h2>
       <p>
-        A request built on this website is not a booking. Neither is a preferred date you've told us
-        about. A booking exists only when we have confirmed a specific date and time with you, and
-        you have accepted the quoted price.
+        There are two ways to reach us, and they are not the same in this respect. It is worth being
+        precise about which one you have used.
       </p>
       <p>
-        We say this plainly because the opposite assumption causes real problems. Nobody should take
-        a morning off work on the strength of a form submission.
+        <strong>If you built a quote request</strong>, that is not a booking. Neither is a preferred
+        date you've told us about. A booking exists only when we have confirmed a specific date and
+        time with you, and you have accepted the quoted price. We say this plainly because the
+        opposite assumption causes real problems. Nobody should take a morning off work on the
+        strength of a form submission.
+      </p>
+      <p>
+        <strong>If you booked a fixed-price job online</strong> and chose a time slot, that is a
+        booking. It goes into our diary as a confirmed appointment at the price shown when you
+        booked, and we will be there.
+      </p>
+      <p>
+        Only work with a genuinely fixed price can be booked that way. Anything where the cost
+        depends on what your particular car needs goes through a quote first, because we are not
+        willing to confirm a price we might then have to change.
+      </p>
+
+      <h2>If the job turns out to be bigger</h2>
+      <p>
+        A fixed-price booking covers the work described when you booked it. If we get to your car
+        and find it needs something that booking didn't cover, we will tell you what it needs and
+        what it costs, and you decide. We will not do additional work and present you with a bill
+        for it afterwards.
       </p>
 
       <h2>Changing or cancelling</h2>

@@ -23,14 +23,15 @@ npm run dev                    # http://localhost:3000
 Router plugin generates `src/routeTree.gen.ts` during the build and every route
 file resolves its types against it.
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Dev server with HMR |
-| `npm test` | Vitest — 153 tests |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | ESLint + Prettier |
-| `npm run build` | Production build to `.vercel/output` |
-| `node scripts/smoke.mjs` | Real-browser smoke test of every route + the quote journey |
+| Command              | What it does                                                            |
+| -------------------- | ----------------------------------------------------------------------- |
+| `npm run dev`        | Dev server with HMR                                                     |
+| `npm test`           | Vitest                                                                  |
+| `npm run typecheck`  | `tsc --noEmit`                                                          |
+| `npm run lint`       | ESLint + Prettier                                                       |
+| `npm run build`      | Production build to `.vercel/output`                                    |
+| `npm run test:smoke` | Real-browser smoke test of every route + the quote journey              |
+| `npm run test:sql`   | Apply every migration to a throwaway Postgres and run `supabase/tests/` |
 
 ---
 
@@ -62,7 +63,11 @@ file resolves its types against it.
    `.vercel/output` — the Nitro Vercel preset writes the Build Output API v3
    structure directly.
 3. Set the environment variables from `.env.example` in Production and Preview.
-4. Deploy. `vercel.json` applies the security headers and CSP.
+4. Deploy. The security headers and CSP are written in `vercel.json` and served
+   through Nitro route rules (`scripts/security-headers.mjs`, from core), because
+   a Build Output API deployment reads the generated config rather than
+   `vercel.json`. After the first deploy, `curl -I` the live site and check for
+   `content-security-policy` — that is the only proof that counts.
 
 ### Before it goes live
 
@@ -125,22 +130,35 @@ Prefilled WhatsApp message — the customer only presses send
 Drive Precise confirms the vehicle-specific price
         ↓
 Admin marks it quoted / accepted / booked, copies the TechMan block
+        ↓
+TechMan sends the estimate; the customer approves and pays on its portal
 ```
+
+The second door, for work with a genuinely fixed price:
+
+```
+/book  →  postcode coverage check  →  TechMan web booking widget
+                                              ↓
+                                     straight into the live diary
+```
+
+Only a single, confirmed, fixed-price service mapped to a labour slot may be
+booked this way — `selfBookableSlot()` is the gate, and §20 is why.
 
 ### Design rules the code enforces
 
 These are from the client brief and are covered by tests, not just prose.
 
-| Rule | Where it lives |
-| --- | --- |
-| Three pricing types, never blurred. A `quote` service has no price field at all. | `services.ts`, `priceLabel()`, a CHECK constraint in SQL |
-| Never fabricate a saving | `packageUpgrades()` returns nothing unless the arithmetic is honest on both sides |
-| The basket total is never the bare word "Total" | `totalLabel()` |
-| No diagnostics until the equipment exists | `CATEGORY_ORDER` omits `diagnostics`; the services are `active: false` |
-| No air-conditioning regas | Asserted across every public description |
-| Never invent vehicle details | `describeVehicle()` returns "Model to confirm" |
-| Internal cost data never reaches a browser | `toPublicService()`, and `get_public_services()` names its columns |
-| Not affiliated with BMW | Stated in the footer on every page |
+| Rule                                                                             | Where it lives                                                                    |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Three pricing types, never blurred. A `quote` service has no price field at all. | `services.ts`, `priceLabel()`, a CHECK constraint in SQL                          |
+| Never fabricate a saving                                                         | `packageUpgrades()` returns nothing unless the arithmetic is honest on both sides |
+| The basket total is never the bare word "Total"                                  | `totalLabel()`                                                                    |
+| No diagnostics until the equipment exists                                        | `CATEGORY_ORDER` omits `diagnostics`; the services are `active: false`            |
+| No air-conditioning regas                                                        | Asserted across every public description                                          |
+| Never invent vehicle details                                                     | `describeVehicle()` returns "Model to confirm"                                    |
+| Internal cost data never reaches a browser                                       | `toPublicService()`, and `get_public_services()` names its columns                |
+| Not affiliated with BMW                                                          | Stated in the footer on every page                                                |
 
 ### Security posture
 
@@ -161,21 +179,25 @@ These are from the client brief and are covered by tests, not just prose.
 
 ## Data model
 
-| Table | Purpose |
-| --- | --- |
-| `services`, `service_packages` | The catalogue, editable without a deploy |
-| `enquiries` | The quote request, frozen at submit, plus its lifecycle |
-| `trade_enquiries` | B2B, separate lifecycle, never mixed with retail |
-| `partners`, `partner_referrals` | Partner network and the referral ledger |
-| `campaigns` | Seasonal homepage banners |
-| `site_events` | Cookieless funnel events |
-| `user_roles` | Staff access |
+| Table                           | Purpose                                                 |
+| ------------------------------- | ------------------------------------------------------- |
+| `services`, `service_packages`  | The catalogue, editable without a deploy                |
+| `enquiries`                     | The quote request, frozen at submit, plus its lifecycle |
+| `trade_enquiries`               | B2B, separate lifecycle, never mixed with retail        |
+| `partners`, `partner_referrals` | Partner network and the referral ledger                 |
+| `campaigns`                     | Seasonal homepage banners                               |
+| `site_events`                   | Cookieless funnel events                                |
+| `user_roles`                    | Staff access                                            |
 
 Views: `enquiry_funnel_daily`, `service_attachment`, `partner_referral_summary`.
 
 ## Not built yet, by design
 
-Registration lookup (§21), TechMan API integration (§28 — no supported API
-exists, so the handoff is a copy block), customer accounts (§38), automated
-review requests (§39) and service reminders (§40). The schema has room for each;
-none of them block launch.
+Customer accounts (§38), automated review requests (§39) and service reminders
+(§40). The schema has room for each; none of them block launch.
+
+**TechMan API integration** (§28) remains unbuilt because no supported API
+exists, not because nobody got to it. The website now embeds TechMan's booking
+widget at `/book` and links its customer portal, and `techman-handoff.ts` is an
+interface with a `manual` provider live and an `api` provider dark — so the day
+TechMan confirm credentials, nothing that calls it has to change.

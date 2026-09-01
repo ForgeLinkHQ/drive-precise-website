@@ -49,6 +49,46 @@ interface Detail {
   [key: string]: unknown;
 }
 
+/**
+ * The work requested, as a list.
+ *
+ * The pricing type travels with each line rather than being summarised at the
+ * bottom, for the same reason it does in the WhatsApp message and the TechMan
+ * handoff block: the first thing worth knowing is which lines are already firm
+ * and which are the actual job.
+ *
+ * Every field is treated as optional. Alerts queued before the migration that
+ * started sending `items` are still in the queue when this deploys, and one of
+ * them must render as an email rather than as an exception.
+ */
+function workRequested(items: unknown): string | null {
+  if (!Array.isArray(items) || items.length === 0) return null;
+
+  const lines = items
+    .map((raw) => {
+      const item = (raw ?? {}) as Record<string, unknown>;
+      const name = typeof item.name === "string" ? item.name : null;
+      if (!name) return null;
+
+      const pricing = typeof item.pricing === "string" ? item.pricing : null;
+      const price = Number(item.priceGbp);
+      const label = pricing === "quote" || !Number.isFinite(price)
+        ? "price on inspection"
+        : pricing === "from"
+        ? `from £${price.toFixed(2)}`
+        : `£${price.toFixed(2)}`;
+
+      const kind = item.kind === "package" ? " (package)" : "";
+      return `<li>${esc(name)}${kind} — ${esc(label)}</li>`;
+    })
+    .filter((line): line is string => line !== null);
+
+  if (lines.length === 0) return null;
+  return `<ul style="margin:0 0 16px;padding-left:20px;font-size:15px;line-height:1.6">${
+    lines.join("")
+  }</ul>`;
+}
+
 function money(value: unknown): string | null {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return null;
@@ -80,11 +120,17 @@ function build(event: AlertEvent, d: Detail): { subject: string; html: string } 
               ["Reference", d.reference as string],
               ["Vehicle", d.registration as string],
               ["Phone", d.phone as string],
+              ["Email", d.customer_email as string],
+              [
+                "Mileage",
+                d.mileage ? `${Number(d.mileage).toLocaleString("en-GB")} miles` : null,
+              ],
               ["Postcode", d.postcode as string],
               ["Indicative", money(d.indicative_total_gbp)],
               ["Preferred", d.preferred_date as string],
               ["Window", d.preferred_window as string],
             ]) +
+            (workRequested(d.items) ?? "") +
             p("The basket total above is what the website showed them. It is not a quote — the firm price is yours to set once you know the car.") +
             btn("Open in Portal", OWNER_LINKS.enquiries),
         ),
@@ -93,7 +139,9 @@ function build(event: AlertEvent, d: Detail): { subject: string; html: string } 
 
     case "quote_accepted": {
       return {
-        subject: `Quote accepted — ${d.registration ?? "vehicle"} (${esc(d.reference ?? "")})`,
+        subject: `Quote accepted — ${d.registration ?? "vehicle"} (${
+          esc(d.reference ?? "")
+        })`,
         html: ownerWrapper(
           eyebrow("Quote accepted") +
             h1(`${d.customer_name ?? "A customer"} has said yes`) +
@@ -130,10 +178,16 @@ function build(event: AlertEvent, d: Detail): { subject: string; html: string } 
     case "stale_enquiry": {
       const waited = waitingFor(d.waiting_since);
       return {
-        subject: `Still waiting — ${d.customer_name ?? "a customer"} (${esc(d.reference ?? "")})`,
+        subject: `Still waiting — ${d.customer_name ?? "a customer"} (${
+          esc(d.reference ?? "")
+        })`,
         html: ownerWrapper(
           eyebrow("Nobody has replied") +
-            h1(`${d.customer_name ?? "A customer"} has been waiting${waited ? ` ${waited}` : ""}`) +
+            h1(
+              `${d.customer_name ?? "A customer"} has been waiting${
+                waited ? ` ${waited}` : ""
+              }`,
+            ) +
             facts([
               ["Reference", d.reference as string],
               ["Vehicle", d.registration as string],

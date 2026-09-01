@@ -4,6 +4,7 @@ import { AlertTriangle } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { configurationIssues } from "@/lib/business";
+import { techmanConfigurationIssues } from "@/lib/techman";
 import { formatGbp, SERVICES, UNCONFIRMED_PRICE_COUNT } from "@/lib/services";
 import { ENQUIRY_STATUS_LABEL, OPEN_STATUSES, type EnquiryStatus } from "@/lib/enquiry";
 
@@ -56,6 +57,11 @@ function AdminOverview() {
   }, []);
 
   const configIssues = configurationIssues();
+  // Kept separate from `configurationIssues()` on purpose: that list is
+  // rendered as a public sentence on the legal pages, and a missing booking
+  // parameter is an operational gap rather than a statutory one. Both belong
+  // here, where the person who can fix either of them is looking.
+  const techmanIssues = techmanConfigurationIssues();
   const openCount = OPEN_STATUSES.reduce((sum, status) => sum + (counts[status] ?? 0), 0);
 
   return (
@@ -70,7 +76,7 @@ function AdminOverview() {
       {/* Pre-launch blockers. These are the things that will embarrass the
           business if the site goes live with them unresolved, so they are at
           the top rather than buried in a settings screen. */}
-      {(configIssues.length > 0 || UNCONFIRMED_PRICE_COUNT > 0) && (
+      {(configIssues.length > 0 || techmanIssues.length > 0 || UNCONFIRMED_PRICE_COUNT > 0) && (
         <section
           aria-labelledby="blockers-heading"
           className="rounded-lg border border-status-monitor/50 bg-status-monitor/8 p-5"
@@ -94,6 +100,9 @@ function AdminOverview() {
                   </li>
                 )}
                 {configIssues.map((issue) => (
+                  <li key={issue}>{issue}</li>
+                ))}
+                {techmanIssues.map((issue) => (
                   <li key={issue}>{issue}</li>
                 ))}
                 <li>Legal pages are honest drafts and have not been reviewed by a solicitor.</li>

@@ -70,14 +70,57 @@ These come from the client brief and are enforced by tests, not just documented.
    result and sitemap. Do not add "coming soon" wording.
 5. **No air-conditioning regas** (§47). The cabin hygiene treatment is a hygiene
    treatment and says so.
-6. **Never invent vehicle details** (§21). There is no registration lookup yet.
-   `describeVehicle()` returns "Model to confirm" and the fields for a future
-   provider are all optional.
+6. **Never invent vehicle details** (§21). A UKVD/DVLA lookup now exists
+   (`supabase/functions/vehicle-lookup/`), but it does not return a model, and
+   nothing fills that in. `describeVehicle()` still returns "Model to confirm",
+   and with no key configured the form degrades to the customer typing it.
 7. **Internal cost data never reaches a browser** (§60). `toPublicService()` strips
    it, `get_public_services()` names its columns, and no RLS policy admits anon to
    the `services` table itself.
 8. **Not affiliated with BMW.** BMW is the specialism, not the employer. The
    footer says so on every page.
+
+## TechMan GMS — where the business actually runs
+
+TechMan is the garage management system. The diary, estimates, invoices and
+payments live there, not here. This site feeds it; it is not a second copy of it.
+
+Three customer-facing surfaces matter, and only two are ever linked from here:
+
+| Surface           | Host                               | Role                       |
+| ----------------- | ---------------------------------- | -------------------------- |
+| Web Booking       | `drivepreciseltd.wsptm.com`        | Embedded at `/book`        |
+| Customer Portal   | `drivepreciseltd.portal.wsptm.com` | Estimate → authorise → pay |
+| System / TechView | `WDPR1001.wsptm.com`               | Staff only. Never linked.  |
+
+**The setting that is easy to get backwards.** TechMan's own "Web Booking URL"
+field (`Settings > Sites`) is _this site's_ `/book` page, not the TechMan host.
+It is what TechMan puts into reminder emails and SMS, so pointing it at TechMan
+makes every reminder link bypass the website.
+
+**There is no TechMan API.** Its documented web integration is one-directional
+and its real integrations are commercial partner deals. `techman-handoff.ts` is
+therefore an interface with two providers: `manual` (live) and `api` (dark,
+switched by `VITE_TECHMAN_HANDOFF_MODE` the day credentials are confirmed).
+Do not write an HTTP client against a guessed shape — see the comment above
+`techman_reference` in `20260801020000_enquiries.sql`.
+
+**Two doors, and only one of them is self-service.** `/quote` is for work whose
+price depends on the car, which is most of it. `/book` is for the minority with
+a genuinely fixed price. `selfBookableSlot()` in `src/lib/techman.ts` is the
+gate, and every branch of it stops a specific bad booking: one service only (a
+TechMan booking is one labour slot), `fixed` only (§20), `priceConfirmed` only
+(a placeholder must never become a contractual offer), and a mapped
+`internal.techmanSlot`. `src/test/techman.test.ts` tests each branch separately.
+
+**The CSP is load-bearing.** The widget is a third-party script that injects an
+iframe. `vercel.json` must list the booking host under `script-src`, `frame-src`
+and `connect-src` — `frame-src` absent is not neutral, it falls back to
+`default-src 'self'` and silently refuses the iframe. `src/test/csp.test.ts`
+guards this, including that `frame-ancestors` still admits the Portal.
+
+**VAT.** TechMan Labour Slot prices are entered _ex. VAT_ and Drive Precise is
+not VAT registered. Slot prices must equal the site's prices exactly.
 
 ## Managed From The Portal
 
@@ -129,6 +172,10 @@ After deploying, schedule via pg_cron and set the function secrets
 - `src/lib/basket.ts` — the quote draft store, persistence and totals.
 - `src/lib/enquiry.ts` — validation, the immutable snapshot, submission.
 - `src/lib/whatsapp.ts` — the prefilled handoff message.
+- `src/lib/techman.ts` — TechMan configuration, deep links, and the self-booking gate.
+- `src/lib/techman-handoff.ts` — getting an enquiry into TechMan. One interface, two providers.
+- `src/routes/book.tsx` — online booking, behind a postcode coverage check.
+- `src/components/site/techman-booking.tsx` — the embed, with a fallback that survives a blocked script.
 - `src/lib/service-catalog.ts` — database overlay with the shipped catalogue underneath.
 - `src/routes/quote.tsx` — the seven-step builder.
 - `supabase/migrations/` — schema, RLS and the definer functions that are the only
@@ -147,13 +194,25 @@ decision rather than a drift.
 ## Commands
 
 ```bash
-npm run dev        # local dev server
-npm test           # vitest
-npm run typecheck  # tsc --noEmit
-npm run lint       # eslint + prettier
-npm run build      # vite build -> .vercel/output
-npm run test:all   # typecheck + test + build
+npm run dev         # local dev server
+npm test            # vitest
+npm run typecheck   # tsc --noEmit
+npm run lint        # eslint + prettier
+npm run build       # vite build -> .vercel/output
+npm run test:smoke  # every route and the quote journey, in a real Chromium
+npm run test:sql    # every migration against a real Postgres, then supabase/tests
+npm run test:all    # build + typecheck + test + smoke + sql
 ```
 
 The route tree (`src/routeTree.gen.ts`) is generated by the router plugin during
-dev/build. A fresh clone will fail `typecheck` until `npm run build` has run once.
+dev/build. A fresh clone will fail `typecheck` until `npm run build` has run once,
+and `security-headers.test.ts` only proves the headers reach the build output
+once there is one — CI builds first for both reasons.
+
+`test:sql` is the half of the suite that reads nothing. Several rules here live
+only in SQL — the promotion substantiation gate is a `WHERE` clause, §60 is a
+column list, whether the Portal may call a function at all is a privilege — so
+`scripts/verify-sql.sh` applies the migrations to a throwaway PostgreSQL and
+runs the assertions in `supabase/tests/` against it. Its bootstrap installs
+pgcrypto into `extensions`, where Supabase puts it, which is how it found a
+preview function that had never been able to run in production.

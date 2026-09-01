@@ -21,8 +21,11 @@ import {
   type EnquiryLineItem,
 } from "@/lib/enquiry";
 import { formatGbp } from "@/lib/services";
+import { handoffTextFor } from "@/lib/techman-handoff";
+import { techmanBookingHref, techmanDeepLinkingConfigured } from "@/lib/techman";
 import { formatMileage, formatRegistration } from "@/lib/vehicle";
 import { REFERRAL_SOURCE_LABEL, type ReferralSource } from "@/lib/attribution";
+import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/enquiries")({
@@ -272,27 +275,12 @@ function EnquiryDetail({
   /**
    * The TechMan handoff block (§28).
    *
-   * No supported API exists, so the integration is a person copying a block of
-   * text. Making that block correct and complete is worth more than a
-   * speculative integration against an API nobody has confirmed.
+   * Built by `techman-handoff.ts` rather than here, so the clipboard block, the
+   * owner alert email and any future API call are all one shape. See that file
+   * for why this is still a person copying text.
    */
-  const handoff = [
-    `Reference: ${enquiry.reference}`,
-    `Customer: ${enquiry.customer_name}`,
-    `Phone: ${enquiry.customer_phone}`,
-    enquiry.customer_email ? `Email: ${enquiry.customer_email}` : null,
-    `Registration: ${formatRegistration(enquiry.registration)}`,
-    enquiry.mileage ? `Mileage: ${formatMileage(enquiry.mileage)}` : null,
-    enquiry.postcode ? `Postcode: ${enquiry.postcode}` : null,
-    "",
-    "Work requested:",
-    ...items.map((i) => `- ${i.name}${i.pricing === "quote" ? " (quote)" : ""}`),
-    "",
-    enquiry.customer_notes ? `Customer notes: ${enquiry.customer_notes}` : null,
-    enquiry.vehicle_notes ? `Vehicle notes: ${enquiry.vehicle_notes}` : null,
-  ]
-    .filter((line) => line !== null)
-    .join("\n");
+  const handoff = handoffTextFor(enquiry);
+  const bookingLink = techmanBookingHref({ registration: enquiry.registration });
 
   // A real modal, not a positioned div. The previous version trapped no focus,
   // ignored Escape, left the page behind scrolling and never returned focus to
@@ -429,6 +417,38 @@ function EnquiryDetail({
                 />
               )}
             </Field>
+
+            {/* The other half of the TechMan loop (§28).
+                Once a job is priced, the customer picks their own slot rather
+                than the two of you trading dates over WhatsApp. The link
+                preselects the vehicle, and the labour slot too once TechMan
+                confirm the parameter name — see techman.ts. */}
+            {bookingLink && (
+              <div className="rounded-md border border-border p-4">
+                <p className="text-sm font-medium">Send the customer a booking link</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {techmanDeepLinkingConfigured()
+                    ? "Opens their booking with this vehicle already selected."
+                    : "Opens the booking flow. It will not preselect the job until VITE_TECHMAN_SLOT_PARAM is set."}
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-3"
+                  onClick={() => {
+                    void navigator.clipboard
+                      .writeText(bookingLink)
+                      .then(() => {
+                        trackEvent("booking_link_sent");
+                        toast.success("Booking link copied");
+                      })
+                      .catch(() => toast.error("Couldn't copy. Select the link instead."));
+                  }}
+                >
+                  Copy booking link
+                </Button>
+              </div>
+            )}
 
             <details className="rounded-md border border-border p-4">
               <summary className="cursor-pointer text-sm font-medium">Copy for TechMan</summary>

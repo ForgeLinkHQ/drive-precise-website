@@ -86,6 +86,19 @@ export interface ServiceInternals {
   labourAllocationMinutes?: number;
   /** Typical travel allowance for a mobile appointment, minutes. */
   travelMinutes?: number;
+  /**
+   * The TechMan Labour Slot this service is bookable as (§28).
+   *
+   * Present only on services a customer may book themselves without speaking to
+   * anyone, which means a `fixed` price that a human has confirmed. Anything
+   * `from` or `quote` has no slot and never gets a "book now" button —
+   * §20's three pricing types decide who is allowed to self-serve.
+   *
+   * It lives in `internal` because it is an operational identifier rather than
+   * something a customer reads, which also means `toPublicService()` strips it
+   * on the way to a browser and §60 holds without a further thought.
+   */
+  techmanSlot?: string;
   notes?: string;
 }
 

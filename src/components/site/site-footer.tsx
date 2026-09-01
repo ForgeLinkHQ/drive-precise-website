@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { BUSINESS, SERVICE_AREAS } from "@/lib/business";
 import { CATEGORY_LABEL, CATEGORY_ORDER, CATEGORY_SLUG, FROM_PRICE_CAVEAT } from "@/lib/services";
 import { mailtoHref, telHref } from "@/lib/contact-links";
+import { TECHMAN, techmanPortalConfigured } from "@/lib/techman";
 
 /**
  * The footer carries the legal framework (§48).
@@ -216,6 +217,22 @@ export function SiteFooter() {
                   Booking & cancellation
                 </Link>
               </li>
+              {/* The customer portal (§28). Somebody sent an estimate last week
+                  has an email with a link in it; this is for when they cannot
+                  find that email. Omitted entirely when unconfigured, rather
+                  than rendered as a dead link. */}
+              {techmanPortalConfigured() && (
+                <li>
+                  <a
+                    href={TECHMAN.portalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-accent"
+                  >
+                    Approve or pay an estimate
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>

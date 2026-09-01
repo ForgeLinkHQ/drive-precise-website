@@ -1,6 +1,6 @@
 {
-  "coreVersion": "1.4.0",
-  "publishedAt": "2026-08-19",
+  "coreVersion": "1.5.0",
+  "publishedAt": "2026-09-01",
   "canonical": "forgelink-portal/core",
   "clientIdentityDenylist": [
     "Drive Precise",
@@ -22,10 +22,13 @@
     "site/.prettierrc": "1ed88d3b99eced8dc3b6f58f26645466dd1ceaca6c5a9b818531c941ac28e55b",
     "site/CONTRIBUTING.md": "9a99632c60586374b1e15d676339283003cbf00030a00ad85b7f0e3861789bea",
     "site/SECURITY.md": "245db11ac6161bdbf617f411aa6cae462efdb8f12a9ccc570281e6ff30a7d5a0",
-    "site/scripts/core-sync.mjs": "b1a276d60856ab3e676d6eb51321e5b303b9fcea71bf2af29b897c8bedbc149f",
+    "site/scripts/core-sync.mjs": "bc9ca54ca22795decbc342d81c9d0569da76488500a12566d38cee9aca1358a4",
+    "site/scripts/security-headers.d.mts": "97d01efe9c7c5776058765aebf8d3204508f66f02fe15fde5933b5f231850845",
+    "site/scripts/security-headers.mjs": "cb22616e5d066b016157140a8032f1f94b55325bcfd5ab744937b7c198ab0029",
     "site/src/lib/contact-links.ts": "cfe022dbbd5d34c1e85faa6107be5d04594ae7d04d5759fd536d64acc826ed2b",
     "site/src/lib/utils.ts": "d1f1e0d62cb8d8d1e04c26e14de842d8a151f75812d81b046c65b5d1fe8e4b27",
     "site/src/test/core-drift.test.ts": "981ac4b3e1c60938c41c8889f86c13d396d3183b0826c407c589a205910b9355",
+    "site/src/test/security-headers.test.ts": "7815956642bfaf291c045c7deeb88e2de938d9d0776f9d32f20cb907e34c9c8d",
     "site/src/test/share-metadata.test.ts": "75ef652ca64fa0e198cc02d53bd9d82f7e35cae5510fe70db356e4340a1ff6bd"
   },
   "requiredFiles": [
@@ -45,13 +48,8 @@
   "duplication": [
     {
       "path": "supabase/functions/_shared/http.ts",
-      "alsoKnownAs": [
-        "supabase/functions/_shared/cors.ts"
-      ],
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website"
-      ],
+      "alsoKnownAs": ["supabase/functions/_shared/cors.ts"],
+      "repos": ["char-beauty-app", "drive-precise-website"],
       "status": "queued",
       "owner": "brandon",
       "measured": "Written twice 19 hours apart under different names. char-beauty consolidated 21 copies into http.ts; drive-precise created cors.ts.",
@@ -59,10 +57,7 @@
     },
     {
       "path": "supabase/functions/_shared/email-template.ts",
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website"
-      ],
+      "repos": ["char-beauty-app", "drive-precise-website"],
       "status": "queued",
       "owner": "brandon",
       "measured": "268 lines vs 113, only 38 in common.",
@@ -70,10 +65,7 @@
     },
     {
       "path": "supabase/functions/_shared/owner-recipient.ts",
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website"
-      ],
+      "repos": ["char-beauty-app", "drive-precise-website"],
       "status": "queued",
       "owner": "brandon",
       "measured": "76 lines vs 75, only 43 in common.",
@@ -81,10 +73,7 @@
     },
     {
       "path": "src/lib/contact-links.ts",
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website"
-      ],
+      "repos": ["char-beauty-app", "drive-precise-website"],
       "status": "queued",
       "owner": "brandon",
       "measured": "39 lines vs 34, 25 in common.",
@@ -92,10 +81,7 @@
     },
     {
       "path": "src/lib/analytics.ts",
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website"
-      ],
+      "repos": ["char-beauty-app", "drive-precise-website"],
       "status": "queued",
       "owner": "brandon",
       "measured": "165 lines vs 159, 72 in common.",
@@ -103,10 +89,7 @@
     },
     {
       "path": "src/lib/service-catalog.ts",
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website"
-      ],
+      "repos": ["char-beauty-app", "drive-precise-website"],
       "status": "queued",
       "owner": "brandon",
       "measured": "226 lines vs 287, 90 in common.",
@@ -114,10 +97,7 @@
     },
     {
       "path": "public/og-image.jpg + favicon.ico + robots.txt + sitemap.xml",
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website"
-      ],
+      "repos": ["char-beauty-app", "drive-precise-website"],
       "status": "open-defect",
       "owner": "brandon",
       "measured": "drive-precise has no public/ directory at all while its code references /og-image.jpg and /favicon.ico. char-beauty's og-image fix is on an unmerged branch.",
@@ -125,11 +105,7 @@
     },
     {
       "path": ".github/CODEOWNERS",
-      "repos": [
-        "char-beauty-app",
-        "drive-precise-website",
-        "forgelink-portal"
-      ],
+      "repos": ["char-beauty-app", "drive-precise-website", "forgelink-portal"],
       "status": "blocked",
       "owner": "brandon",
       "measured": "Absent from all three.",
