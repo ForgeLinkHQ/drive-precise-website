@@ -66,5 +66,18 @@ for (const [rel, expected] of Object.entries(manifest.files)) {
 
 writeFileSync(join(REPO, "forgelink.core.json"), JSON.stringify(manifest, null, 2) + "\n");
 
+// Format the copied manifest the way the client repo formats everything else.
+// `JSON.stringify` and prettier disagree about short arrays, and a client whose
+// CI runs `prettier --check .` failed on the very file this script had just
+// written — twice, on two repos, before this line existed.
+try {
+  const { execFileSync } = await import("node:child_process");
+  execFileSync("npx", ["prettier", "--write", join(REPO, "forgelink.core.json")], {
+    stdio: "pipe",
+  });
+} catch {
+  // Prettier is a convenience here, not a gate. The manifest is already valid.
+}
+
 console.log(`core ${manifest.coreVersion}: ${copied} updated, ${unchanged} already current`);
 if (copied) console.log("Run the test suite before committing.");

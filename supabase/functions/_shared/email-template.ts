@@ -40,11 +40,15 @@ export function esc(value: unknown): string {
 }
 
 export function eyebrow(text: string): string {
-  return `<p style="margin:0 0 8px;font-family:${FONT};font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:${B.blue};font-weight:700;">${esc(text)}</p>`;
+  return `<p style="margin:0 0 8px;font-family:${FONT};font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:${B.blue};font-weight:700;">${
+    esc(text)
+  }</p>`;
 }
 
 export function h1(text: string): string {
-  return `<h1 style="margin:0 0 16px;font-family:${FONT};font-size:24px;line-height:1.25;color:${B.ink};font-weight:700;">${esc(text)}</h1>`;
+  return `<h1 style="margin:0 0 16px;font-family:${FONT};font-size:24px;line-height:1.25;color:${B.ink};font-weight:700;">${
+    esc(text)
+  }</h1>`;
 }
 
 export function p(text: string): string {
@@ -69,8 +73,12 @@ export function facts(rows: Array<[string, string | null | undefined]>): string 
     .map(
       ([label, value]) =>
         `<tr>
-           <td style="padding:6px 12px 6px 0;font-family:${FONT};font-size:13px;color:${B.muted};white-space:nowrap;vertical-align:top;">${esc(label)}</td>
-           <td style="padding:6px 0;font-family:${FONT};font-size:15px;color:${B.ink};font-weight:600;">${esc(value)}</td>
+           <td style="padding:6px 12px 6px 0;font-family:${FONT};font-size:13px;color:${B.muted};white-space:nowrap;vertical-align:top;">${
+          esc(label)
+        }</td>
+           <td style="padding:6px 0;font-family:${FONT};font-size:15px;color:${B.ink};font-weight:600;">${
+          esc(value)
+        }</td>
          </tr>`,
     )
     .join("");
@@ -81,7 +89,11 @@ export function facts(rows: Array<[string, string | null | undefined]>): string 
 export function btn(label: string, href: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px;">
     <tr><td style="background:${B.blue};border-radius:6px;">
-      <a href="${esc(href)}" style="display:inline-block;padding:12px 22px;font-family:${FONT};font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;">${esc(label)}</a>
+      <a href="${
+    esc(href)
+  }" style="display:inline-block;padding:12px 22px;font-family:${FONT};font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;">${
+    esc(label)
+  }</a>
     </td></tr>
   </table>`;
 }

@@ -23,9 +23,9 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -35,13 +35,13 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
-        run: npm test
-
-      # The build has to come before the typecheck, not after. The TanStack
-      # Router plugin generates src/routeTree.gen.ts during the build, and every
-      # route file imports its types from it — so on a fresh checkout
-      # `tsc --noEmit` has nothing to resolve against and fails on all of them.
+      # The build comes before the tests and the typecheck, and both orderings
+      # are load-bearing. The TanStack Router plugin generates
+      # src/routeTree.gen.ts during the build and every route file imports its
+      # types from it, so on a fresh checkout `tsc --noEmit` has nothing to
+      # resolve against. And `security-headers.test.ts` reads the generated
+      # `.vercel/output/config.json` to prove the headers in vercel.json are
+      # actually served — a test that could only skip in CI would be theatre.
       - name: Build
         run: npm run build
         env:
@@ -51,22 +51,86 @@ jobs:
           VITE_SUPABASE_URL: https://placeholder.supabase.co
           VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
 
+      - name: Test
+        run: npm test
+
       - name: Typecheck
         run: npx tsc --noEmit
 
       - name: Audit (non-blocking)
         run: npm audit --audit-level=high || true
 
+  # Two edge functions, and until this job existed neither was linted, formatted
+  # or checked by anything. `deno check` would be better still, but it has to
+  # resolve the https imports, and a job that fails when esm.sh is slow is a
+  # job people learn to ignore.
+  edge-functions:
+    name: Edge functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Lint edge functions
+        working-directory: supabase/functions
+        run: deno lint
+
+      - name: Check formatting
+        working-directory: supabase/functions
+        run: deno fmt --check
+
+  # The other half of the test suite. Several of this site's rules live only in
+  # SQL — the promotion substantiation gate is a WHERE clause, the enquiry
+  # status rules are RAISE statements, and §60 is a column list on a definer
+  # function — and none of that is checked by reading the migration text.
+  #
+  # This applies every migration to a real PostgreSQL in order, then runs the
+  # assertions in supabase/tests against it. The bootstrap installs pgcrypto
+  # into `extensions` the way Supabase does, which is how it caught a preview
+  # function that had never once been able to run in production.
+  sql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          # No password at all, rather than a throwaway one. The container is
+          # ephemeral and reachable only from this job, but a credential-shaped
+          # line in a repository is a credential-shaped line, and secret
+          # scanning is right to flag those rather than try to judge which ones
+          # matter. This is also what the local harness does (`initdb -A
+          # trust`), so the two agree.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Verify the migrations and the rules they carry
+        run: bash scripts/verify-sql.sh
+        env:
+          DATABASE_URL: postgresql://postgres@localhost:5432/postgres
+
   # Catches the class of mistake unit tests cannot: a page that renders in a
   # test but throws in a real browser, a route that 404s, a nav link pointing at
-  # nothing. Runs against the actual production build.
+  # nothing. Runs against the actual production build, with the database
+  # unplugged in the browser so the run measures the site and not the runner's
+  # DNS.
   smoke:
     runs-on: ubuntu-latest
     needs: verify
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -90,7 +154,7 @@ jobs:
 
       - name: Upload screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-screenshots
           path: smoke-screenshots/

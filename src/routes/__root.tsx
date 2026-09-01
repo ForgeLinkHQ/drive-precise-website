@@ -66,6 +66,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   usePageViews();
+  useHydrationMarker();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -93,6 +94,23 @@ function RootComponent() {
  * later is counted without anyone remembering to instrument it — the failure
  * mode of per-page tracking is a funnel with a silent hole in it.
  */
+/**
+ * Says, on the document, when React has taken over the server's markup.
+ *
+ * Server-rendered pages look complete before they are interactive: the plate
+ * form is on screen, and until hydration finishes a click on it is a native
+ * form submit rather than the router. Nothing in the DOM distinguishes the two
+ * states, which is how the smoke suite came to click a button on a slow runner
+ * and watch the page navigate to `/?`. `html[data-hydrated]` is that
+ * distinction, set from an effect because effects only run on the client after
+ * hydration is complete. Costs nothing, styles nothing.
+ */
+function useHydrationMarker() {
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = "true";
+  }, []);
+}
+
 function usePageViews() {
   const router = useRouter();
 
