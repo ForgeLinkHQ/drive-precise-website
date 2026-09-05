@@ -33,6 +33,15 @@ import {
 } from "./services";
 import { PACKAGES, type ServicePackage } from "./packages";
 
+/**
+ * `price_confirmed` became part of the public RPC in the 2026-09-06 migration.
+ * Keep it local to this boundary until generated Supabase types replace the
+ * hand-written projection types; old deployments simply omit the field and
+ * safely fall back to false.
+ */
+type PublicServiceWithConfirmation = PublicServiceRow & { price_confirmed?: boolean };
+type PublicPackageWithConfirmation = PublicPackageRow & { price_confirmed?: boolean };
+
 export interface Catalogue {
   services: Service[];
   packages: ServicePackage[];
@@ -65,16 +74,6 @@ function isCategory(value: string): value is ServiceCategory {
   return (KNOWN_CATEGORIES as string[]).includes(value);
 }
 
-/**
- * The remaining enum columns, checked rather than asserted.
- *
- * `also_in` was already filtered against the known categories; these three
- * were cast straight across. A cast is a claim about data this code does not
- * control, and the claim shows up on the page: an unrecognised partner
- * category renders a suggestion card whose description resolves to undefined,
- * so the customer gets a partner panel with a heading and no text. Filtering
- * costs nothing and makes the type honest.
- */
 const SEASONS: Season[] = ["winter", "spring", "summer", "autumn"];
 const PARTNER_CATEGORIES: PartnerCategory[] = [
   "tyres",
@@ -102,7 +101,7 @@ function onlyKnown<T extends string>(values: string[], allowed: T[]): T[] {
  * rejected here as well as by the CHECK constraint, because this code also runs
  * against whatever a future migration leaves behind.
  */
-export function rowToService(row: PublicServiceRow): Service | null {
+export function rowToService(row: PublicServiceWithConfirmation): Service | null {
   if (!row.id || !row.name) return null;
   if (!isCategory(row.category)) return null;
   if (!isPricingType(row.pricing)) return null;
@@ -123,10 +122,10 @@ export function rowToService(row: PublicServiceRow): Service | null {
     pricing: row.pricing,
     priceGbp: row.pricing === "quote" ? undefined : priceGbp,
     priceSuffix: row.price_suffix ?? undefined,
-    // Never claimed from a database row. Confirmation is a decision a person
-    // makes in admin; the public projection doesn't carry it, so anything
-    // arriving here is by definition unconfirmed as far as this code knows.
-    priceConfirmed: false,
+    // This boolean is intentionally public: it does not reveal cost or margin;
+    // it says only whether the already-public price has been approved for use.
+    // It is the gate between a display-only placeholder and a TechMan booking.
+    priceConfirmed: row.price_confirmed === true,
     durationMinutes: duration !== undefined && duration > 0 ? duration : undefined,
     mobile: (["yes", "no", "conditional"] as const).includes(row.mobile as MobileSuitability)
       ? (row.mobile as MobileSuitability)
@@ -142,27 +141,19 @@ export function rowToService(row: PublicServiceRow): Service | null {
     customerType: (["retail", "trade", "both"] as const).includes(row.customer_type as CustomerType)
       ? (row.customer_type as CustomerType)
       : "both",
-    // "fit" and "remove" split the modifications pages in two. An unrecognised
-    // value would put the service in neither, so it is dropped explicitly
-    // rather than carried as a lie about its type.
     modStream: row.mod_stream === "fit" || row.mod_stream === "remove" ? row.mod_stream : undefined,
     addOnOnly: row.add_on_only ?? false,
     featured: row.featured ?? false,
-    active: true, // the RPC only returns active rows
+    active: true,
   };
 }
 
-export function rowToPackage(row: PublicPackageRow): ServicePackage | null {
+export function rowToPackage(row: PublicPackageWithConfirmation): ServicePackage | null {
   if (!row.id || !row.name) return null;
   if (!isPricingType(row.pricing)) return null;
 
   const priceGbp = num(row.price_gbp);
   if (row.pricing !== "quote" && priceGbp === undefined) return null;
-  // The same rejection `rowToService` makes, for the same reason and with more
-  // at stake: a negative package price does not just render oddly, it
-  // *subtracts* from the basket estimate and feeds `packageUpgrades()`, where
-  // it would manufacture a saving out of bad data. §25 says savings come from
-  // real configured pricing, and this is where that stops being true.
   if (priceGbp !== undefined && priceGbp < 0) return null;
 
   const duration = num(row.duration_minutes);
@@ -176,9 +167,7 @@ export function rowToPackage(row: PublicPackageRow): ServicePackage | null {
     alsoIncludes: stringArray(row.also_includes),
     pricing: row.pricing,
     priceGbp: row.pricing === "quote" ? undefined : priceGbp,
-    priceConfirmed: false,
-    // Matches the service mapping: a zero or negative duration is bad data,
-    // and `basketTotals` sums these into the time-on-site estimate.
+    priceConfirmed: row.price_confirmed === true,
     durationMinutes: duration !== undefined && duration > 0 ? duration : undefined,
     seasons: onlyKnown(stringArray(row.seasons), SEASONS),
     customerType: (["retail", "trade", "both"] as const).includes(row.customer_type as CustomerType)
@@ -220,14 +209,12 @@ async function load(): Promise<void> {
       supabase.rpc("get_public_packages"),
     ]);
 
-    const serviceRows = (servicesResult.data ?? []) as PublicServiceRow[];
-    const packageRows = (packagesResult.data ?? []) as PublicPackageRow[];
+    const serviceRows = (servicesResult.data ?? []) as PublicServiceWithConfirmation[];
+    const packageRows = (packagesResult.data ?? []) as PublicPackageWithConfirmation[];
 
     const services = serviceRows.map(rowToService).filter((s): s is Service => s !== null);
     const packages = packageRows.map(rowToPackage).filter((p): p is ServicePackage => p !== null);
 
-    // An empty table means "nothing has been published here yet" far more often
-    // than "Drive Precise offers nothing". Keep the shipped menu.
     if (services.length === 0) {
       publish({ ...SHIPPED, loading: false });
       return;
@@ -235,9 +222,6 @@ async function load(): Promise<void> {
 
     const next: Catalogue = {
       services,
-      // Packages fall back independently: a published service catalogue with an
-      // empty package table should still offer the shipped packages rather than
-      // silently dropping the upgrade logic.
       packages: packages.length > 0 ? packages : PACKAGES,
       loading: false,
       fromDatabase: true,
@@ -256,8 +240,6 @@ function fetchCatalogue() {
     if (snapshot !== cache) publish(cache);
     return;
   }
-  // Only a successful load is cached, so a network blip doesn't pin the
-  // shipped menu for the rest of the session.
   if (!inflight) inflight = load();
 }
 
