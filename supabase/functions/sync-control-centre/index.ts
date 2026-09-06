@@ -9,13 +9,20 @@ serve(async (req) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
   const auth = req.headers.get("Authorization") ?? "";
-  if (auth.replace("Bearer ", "").trim() !== SERVICE_KEY) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (auth.replace("Bearer ", "").trim() !== SERVICE_KEY) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
+  }
 
   try {
     const payload = await req.json();
     if (!CONTROL_CENTRE_URL || !CONTROL_CENTRE_SECRET) {
-      console.warn("[sync-control-centre] integration secrets are not configured");
-      return jsonResponse({ skipped: "control centre integration not configured" }, 200);
+      console.warn(
+        "[sync-control-centre] integration secrets are not configured",
+      );
+      return jsonResponse(
+        { skipped: "control centre integration not configured" },
+        200,
+      );
     }
     const response = await fetch(CONTROL_CENTRE_URL, {
       method: "POST",
@@ -27,8 +34,15 @@ serve(async (req) => {
     });
     if (!response.ok) {
       const body = await response.text();
-      console.error(`[sync-control-centre] forward failed (${response.status}): ${body.slice(0, 500)}`);
-      return jsonResponse({ error: "Control Centre forward failed", status: response.status }, 502);
+      console.error(
+        `[sync-control-centre] forward failed (${response.status}): ${
+          body.slice(0, 500)
+        }`,
+      );
+      return jsonResponse(
+        { error: "Control Centre forward failed", status: response.status },
+        502,
+      );
     }
     return jsonResponse({ ok: true }, 200);
   } catch (error) {
